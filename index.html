@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>GizaScan</title>
+<meta name="description" content="Educational 3D exploration featuring published research and alternative theories. Sources cited. Critical thinking encouraged.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Outfit:wght@200;300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#d4a855;--gdim:rgba(212,168,85,.15);--gmid:rgba(212,168,85,.35);--dark:#06060b;--text:#e0d8c8;--dim:#908070;--em:#4488ff;--therm:#ff4422;--acou:#44cc88;--star:#cc88ff;--geo:#aa7744}
+body{overflow:hidden;background:var(--dark);font-family:'Outfit',sans-serif;color:var(--text);-webkit-tap-highlight-color:transparent;user-select:none}
+canvas{display:block;width:100vw!important;height:100vh!important}
+#app{position:fixed;inset:0}
+
+/* PRO Paywall */
+#pro-modal{display:none!important;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+#pro-modal.show{display:flex}
+#pro-box{background:linear-gradient(135deg,#1a1510 0%,#12100c 50%,#1a1510 100%);border:1px solid var(--gold);border-radius:16px;padding:28px 24px;max-width:360px;width:90%;text-align:center;position:relative;box-shadow:0 0 60px rgba(212,168,85,.15)}
+#pro-box .crown{font-size:48px;margin-bottom:8px}
+#pro-box h2{font-family:'Cinzel',serif;color:var(--gold);font-size:20px;letter-spacing:3px;margin-bottom:6px}
+#pro-box .price{font-size:28px;font-weight:600;color:var(--gold);margin:12px 0 4px}
+#pro-box .price-sub{font-size:12px;color:var(--dim);margin-bottom:16px}
+#pro-box .features{text-align:left;margin:16px 0;font-size:13px;line-height:1.9;color:var(--text)}
+#pro-box .features span{color:var(--gold)}
+#pro-buy{background:linear-gradient(135deg,#d4a855,#b8923e);color:#12100c;border:none;padding:14px 32px;border-radius:10px;font-size:16px;font-weight:700;font-family:'Outfit',sans-serif;cursor:pointer;width:100%;letter-spacing:1px;text-transform:uppercase;margin-top:8px;transition:transform .1s}
+#pro-buy:active{transform:scale(.97)}
+#pro-close{position:absolute;top:10px;right:14px;background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;padding:4px 8px}
+#pro-later{background:none;border:none;color:var(--dim);font-size:12px;cursor:pointer;margin-top:12px;padding:4px;text-decoration:underline}
+.cb.locked{position:relative;opacity:1}
+.cb.locked::after{content:""}
+.pro-badge{display:inline-block;background:linear-gradient(135deg,#d4a855,#b8923e);color:#12100c;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle;letter-spacing:.5px}
+.blur-pro{filter:blur(4px);pointer-events:none;user-select:none;position:relative}
+.unlock-banner{background:rgba(212,168,85,.08);border:1px solid var(--gdim);border-radius:8px;padding:12px 16px;margin:12px 0;text-align:center;cursor:pointer}
+.unlock-banner:active{background:rgba(212,168,85,.15)}
+.unlock-banner .lock-icon{font-size:20px;margin-bottom:4px}
+.unlock-banner .lock-text{font-size:12px;color:var(--gold);font-weight:500}
+.unlock-banner .lock-sub{font-size:10px;color:var(--dim);margin-top:2px}
+
+#loader{position:fixed;inset:0;z-index:9999;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1s}
+#loader.done{opacity:0;pointer-events:none}
+#loader .h{font-size:32px;letter-spacing:10px;margin-bottom:16px;opacity:.4;animation:hp 3s ease-in-out infinite}
+@keyframes hp{0%,100%{opacity:.2}50%{opacity:.6}}
+#loader h1{font-family:'Cinzel',serif;font-size:clamp(22px,4.5vw,40px);font-weight:900;color:var(--gold);letter-spacing:clamp(3px,.8vw,8px);text-transform:uppercase;margin-bottom:3px}
+#loader .sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(12px,1.8vw,16px);color:var(--dim);letter-spacing:3px;margin-bottom:30px}
+.ltr{width:clamp(140px,30vw,250px);height:1px;background:rgba(212,168,85,.1);overflow:hidden}
+.lb{height:100%;width:0%;background:var(--gold);transition:width .3s}
+.lp{margin-top:8px;font-size:9px;color:var(--dim);letter-spacing:4px}
+
+#topbar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:linear-gradient(180deg,rgba(6,6,11,.95),transparent);pointer-events:none;opacity:0;animation:fi .8s .5s forwards}
+#topbar>*{pointer-events:auto}
+@keyframes fi{to{opacity:1}}
+.bn{font-family:'Cinzel',serif;font-weight:900;font-size:clamp(11px,1.6vw,15px);letter-spacing:clamp(2px,.4vw,4px);color:var(--gold);text-transform:uppercase}
+.bs{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:clamp(9px,1.2vw,11px);color:var(--dim);letter-spacing:2px;margin-top:1px}
+.mb{font-size:9px;font-weight:500;color:var(--gold);background:var(--gdim);border:1px solid var(--gmid);padding:4px 10px;border-radius:16px;letter-spacing:2px;text-transform:uppercase;transition:all .3s}
+
+/* CONTROLS */
+#ctrls-wrap{position:fixed;bottom:clamp(8px,1.5vh,16px);left:50%;transform:translateX(-50%);z-index:200;display:flex;align-items:center;gap:0;max-width:calc(100vw - 16px);opacity:0;animation:fi .8s .7s forwards}
+.ctr-arr{background:rgba(6,6,11,.95);border:1px solid rgba(212,168,85,.2);color:var(--gold);font-size:14px;width:28px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.ctr-arr:hover,.ctr-arr:active{background:var(--gdim);border-color:var(--gmid)}
+#arr-l{border-radius:10px 0 0 10px;border-right:none}
+#arr-r{border-radius:0 10px 10px 0;border-left:none}
+#ctrls{display:flex;gap:2px;padding:3px;background:rgba(6,6,11,.92);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:1px solid rgba(212,168,85,.08);border-radius:0;overflow-x:auto;scroll-behavior:smooth;flex:1;min-width:0;scrollbar-width:none}
+#ctrls::-webkit-scrollbar{display:none}
+.cb{background:none;border:1px solid transparent;color:var(--dim);font-family:'Outfit',sans-serif;font-size:10px;font-weight:500;padding:8px 12px;border-radius:7px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0}
+.cb:hover{color:var(--gold);background:var(--gdim)}
+.cb.on{background:var(--gdim);border-color:var(--gmid)}
+.cb.on[data-c="em"]{color:var(--em);border-color:rgba(68,136,255,.4)}
+.cb.on[data-c="ac"]{color:var(--acou);border-color:rgba(68,204,136,.4)}
+.cb.on[data-c="th"]{color:var(--therm);border-color:rgba(255,68,34,.4)}
+.cb.on[data-c="st"]{color:var(--star);border-color:rgba(204,136,255,.4)}
+.cb.on[data-c="ge"]{color:var(--geo);border-color:rgba(170,119,68,.4)}
+.cb.on[data-c="go"]{color:var(--gold)}
+.cb svg{width:13px;height:13px;flex-shrink:0}
+.cb .l{display:inline}
+@media(max-width:750px){.cb .l{display:none}.cb{padding:8px 10px}
+#panel{padding-bottom:80px}
+#live-data{top:48px}
+}
+
+/* SCIENCE PANEL */
+#panel{position:fixed;top:0;right:0;bottom:0;z-index:190;width:min(420px,88vw);background:rgba(6,6,11,.97);-webkit-backdrop-filter:blur(30px);backdrop-filter:blur(30px);border-left:1px solid rgba(212,168,85,.08);transform:translateX(100%);transition:transform .5s cubic-bezier(.22,1,.36,1);overflow-y:auto;padding:16px 22px 22px}
+#panel.open{transform:translateX(0)}
+#panel::-webkit-scrollbar{width:2px}
+#panel::-webkit-scrollbar-thumb{background:rgba(212,168,85,.15);border-radius:2px}
+.pc{position:sticky;top:0;float:right;background:rgba(6,6,11,.9);border:1px solid var(--gmid);color:var(--gold);font-size:18px;cursor:pointer;padding:4px 10px;border-radius:6px;z-index:1;margin-bottom:-30px}
+.pt{display:inline-block;font-size:8px;font-weight:600;letter-spacing:3px;text-transform:uppercase;padding:2px 8px;border-radius:3px;margin-bottom:10px}
+.ptitle{font-family:'Cinzel',serif;font-weight:700;font-size:clamp(16px,2.2vw,22px);color:var(--gold);line-height:1.25;margin-bottom:12px}
+.pdesc{font-family:'Cormorant Garamond',serif;font-size:14px;line-height:1.8;color:#a89888;margin-bottom:14px;font-weight:300}
+.pimg{width:100%;border-radius:8px;margin-bottom:14px;border:1px solid rgba(212,168,85,.1)}
+.pstat{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(212,168,85,.06);font-size:11px}
+.pstat .k{color:var(--dim)}.pstat .v{color:var(--gold);font-weight:600;text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px}
+.peq{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--em);background:rgba(68,136,255,.08);border:1px solid rgba(68,136,255,.15);border-radius:6px;padding:8px 12px;margin:10px 0;text-align:center;line-height:1.6;white-space:pre-line}
+.psrc{font-size:9px;color:var(--dim);margin-top:12px;padding-top:8px;border-top:1px solid rgba(212,168,85,.06);line-height:1.6;font-style:italic}
+.pnav{display:flex;gap:4px;margin-top:14px;flex-wrap:wrap}
+.pnb{font-size:9px;padding:4px 8px;border-radius:4px;border:1px solid var(--gmid);background:none;color:var(--gold);cursor:pointer;font-family:'Outfit';transition:all .2s}
+.pnb:hover,.pnb.a{background:var(--gdim)}
+
+/* LIVE DATA */
+#live-data{position:fixed;top:54px;left:14px;z-index:180;display:none;flex-direction:column;gap:4px}
+.ld-card{background:rgba(6,6,11,.85);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(68,136,255,.12);border-radius:6px;padding:6px 10px;min-width:120px}
+.ld-card h4{font-size:7px;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+.ld-card .val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600}
+.ld-card .unit{font-size:8px;color:var(--dim)}
+.ld-card.em{border-color:rgba(68,136,255,.2)}.ld-card.em h4{color:var(--em)}.ld-card.em .val{color:var(--em)}
+.ld-card.ac{border-color:rgba(68,204,136,.2)}.ld-card.ac h4{color:var(--acou)}.ld-card.ac .val{color:var(--acou)}
+.ld-card.th{border-color:rgba(255,68,34,.2)}.ld-card.th h4{color:var(--therm)}.ld-card.th .val{color:var(--therm)}
+
+/* LEGEND - above controls bar, centered */
+#legend{position:fixed;bottom:clamp(48px,6vh,70px);left:50%;transform:translateX(-50%);z-index:190;display:none;background:rgba(6,6,11,.88);border:1px solid rgba(212,168,85,.08);border-radius:8px;padding:5px 12px;font-size:9px;white-space:nowrap}
+#legend .li{display:inline-flex;align-items:center;gap:4px;margin:0 6px}
+#legend .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* TIME - left side, only visible when NOT in FPS */
+#tw{position:fixed;left:10px;top:50%;transform:translateY(-50%);z-index:180;display:flex;flex-direction:column;align-items:center;gap:4px;opacity:0;animation:fi .8s .9s forwards;transition:opacity .3s}
+#tw.hidden{opacity:0!important;pointer-events:none}
+#tw label{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);writing-mode:vertical-lr;transform:rotate(180deg)}
+#ts{-webkit-appearance:none;width:80px;height:2px;background:rgba(212,168,85,.1);border-radius:2px;outline:none;transform:rotate(-90deg);margin:30px 0}
+#ts::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;background:var(--gold);border-radius:50%;cursor:pointer}
+#tl{font-size:9px;color:var(--gold);font-weight:500;writing-mode:vertical-lr;transform:rotate(180deg)}
+
+/* MINIMAP - bottom right, above controls */
+#mm{position:fixed;bottom:clamp(48px,6vh,70px);right:12px;z-index:180;width:100px;height:100px;border-radius:8px;overflow:hidden;border:1px solid rgba(212,168,85,.08);background:rgba(6,6,11,.6);opacity:0;animation:fi .8s 1s forwards}
+#mm canvas{width:100%;height:100%}
+
+/* COMPASS - bottom left, above controls */
+#compass{position:fixed;bottom:clamp(48px,6vh,70px);left:12px;z-index:180;width:40px;height:40px;opacity:0;animation:fi .8s 1s forwards}
+
+/* FPS */
+#fh{position:fixed;bottom:50%;left:50%;transform:translate(-50%,50%);z-index:300;text-align:center;pointer-events:none;opacity:0;transition:opacity .5s}
+#fh.show{opacity:1}
+.ch{width:16px;height:16px;margin:0 auto 8px;position:relative}
+.ch::before,.ch::after{content:'';position:absolute;background:rgba(212,168,85,.4)}
+.ch::before{width:1px;height:16px;left:7.5px}
+.ch::after{width:16px;height:1px;top:7.5px}
+#fh p{font-size:10px;color:var(--dim);letter-spacing:1px}
+
+/* DEPTH - replaces time slider position in FPS */
+#dg{position:fixed;left:14px;top:50%;transform:translateY(-50%);z-index:180;display:none;flex-direction:column;align-items:center;gap:3px}
+#dg .db{width:2px;height:120px;background:rgba(212,168,85,.06);border-radius:2px;position:relative}
+#dg .df{position:absolute;bottom:0;width:100%;background:var(--gold);border-radius:2px;transition:height .3s}
+#dg .dl{font-size:7px;color:var(--dim);letter-spacing:2px;text-transform:uppercase}
+#dg .dv{font-size:11px;color:var(--gold);font-weight:600}
+
+/* TELEPORT */
+#tp{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:300;display:none;flex-direction:column;gap:5px;background:rgba(6,6,11,.96);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:1px solid var(--gmid);border-radius:12px;padding:16px 20px;min-width:220px}
+#tp.show{display:flex}
+#tp h3{font-family:'Cinzel',serif;font-size:12px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;text-align:center}
+.tpb{background:none;border:1px solid rgba(212,168,85,.12);color:var(--text);font-family:'Outfit';font-size:12px;padding:8px 14px;border-radius:6px;cursor:pointer;transition:all .2s;text-align:left}
+.tpb:hover{background:var(--gdim);border-color:var(--gmid);color:var(--gold)}
+
+/* HOTSPOTS */
+.hs{position:absolute;pointer-events:auto;cursor:pointer;z-index:50;transform:translate(-50%,-50%);transition:opacity .3s}
+.hs:hover{transform:translate(-50%,-50%) scale(1.1)}
+.hsr{width:20px;height:20px;border:2px solid var(--gold);border-radius:50%;margin:0 auto 3px;position:relative;animation:hsa 2.5s ease-in-out infinite}
+.hsr::after{content:'';position:absolute;inset:3px;background:var(--gold);border-radius:50%;opacity:.5}
+@keyframes hsa{0%,100%{box-shadow:0 0 0 0 rgba(212,168,85,.3)}50%{box-shadow:0 0 0 7px rgba(212,168,85,0)}}
+.hsl{background:rgba(6,6,11,.88);border:1px solid var(--gmid);padding:2px 7px;border-radius:3px;font-size:8px;font-weight:500;color:var(--gold);white-space:nowrap;text-align:center;letter-spacing:1px}
+
+/* AUDIO */
+#ab{position:fixed;top:14px;right:14px;z-index:201;background:rgba(6,6,11,.6);border:1px solid rgba(212,168,85,.15);color:var(--dim);width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;animation:fi .8s 1.2s forwards}
+#ab:hover{border-color:var(--gmid);color:var(--gold)}
+#ab.on{color:var(--gold);border-color:var(--gold)}
+#ab svg{width:14px;height:14px}
+
+/* FULLSCREEN */
+#fs-btn{position:fixed;top:14px;right:52px;z-index:201;background:rgba(6,6,11,.6);border:1px solid rgba(212,168,85,.15);color:var(--dim);width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;animation:fi .8s 1.2s forwards}
+#fs-btn:hover{border-color:var(--gmid);color:var(--gold)}
+#fs-btn svg{width:14px;height:14px}
+
+/* MOBILE JOYSTICK */
+.joystick{position:fixed;z-index:250;display:none;touch-action:none}
+.joystick.show{display:block}
+#joy-move{bottom:30px;left:24px}
+#joy-look{bottom:30px;right:24px}
+.joy-base{width:100px;height:100px;border-radius:50%;background:rgba(212,168,85,.08);border:1px solid rgba(212,168,85,.15);position:relative}
+.joy-knob{width:40px;height:40px;border-radius:50%;background:rgba(212,168,85,.25);border:1px solid rgba(212,168,85,.4);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:none}
+.joy-label{text-align:center;font-size:7px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+
+/* CONSTRUCTION ANIMATION */
+#construct{position:fixed;inset:0;z-index:400;display:none;background:rgba(6,6,11,.97);flex-direction:column;align-items:center;justify-content:center}
+#construct.show{display:flex}
+#construct canvas{border-radius:8px;border:1px solid rgba(212,168,85,.1);max-width:90vw;max-height:60vh}
+#construct .c-info{text-align:center;margin-top:16px;max-width:500px}
+#construct .c-year{font-family:'Cinzel',serif;font-size:20px;color:var(--gold);margin-bottom:4px}
+#construct .c-phase{font-size:13px;color:var(--dim);margin-bottom:12px}
+#construct .c-bar{width:300px;height:3px;background:rgba(212,168,85,.1);border-radius:3px;margin:0 auto}
+#construct .c-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .3s}
+#c-close{position:fixed;top:20px;right:20px;z-index:401;background:none;border:1px solid var(--gmid);color:var(--gold);font-size:11px;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'Outfit'}
+#c-controls{display:flex;gap:8px;margin-top:14px}
+#c-controls button{background:none;border:1px solid var(--gmid);color:var(--gold);font-size:11px;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'Outfit';transition:all .2s}
+#c-controls button:hover{background:var(--gdim)}
+
+/* MUON PARTICLES */
+#muon-info{position:fixed;top:60px;right:14px;z-index:180;display:none;background:rgba(6,6,11,.85);border:1px solid rgba(100,68,170,.2);border-radius:6px;padding:6px 10px;min-width:130px}
+#muon-info h4{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:#8866cc;margin-bottom:2px}
+#muon-info .val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:#8866cc}
+
+/* WAVEFORM */
+#waveform{width:100%;height:50px;border-radius:4px;border:1px solid rgba(68,204,136,.15);margin-top:6px;display:none}
+#waveform.show{display:block}
+
+/* CASING INDICATOR */
+#casing-info{position:fixed;bottom:clamp(48px,6vh,70px);left:50%;transform:translateX(-50%);z-index:185;display:none;background:rgba(6,6,11,.88);border:1px solid rgba(212,168,85,.15);border-radius:8px;padding:5px 14px;font-size:9px;color:var(--gold);white-space:nowrap}
+
+/* NIGHT MODE */
+body.night{background:#020208}
+body.night #topbar{background:linear-gradient(180deg,rgba(2,2,8,.95),transparent)}
+.night-label{position:fixed;top:48px;left:50%;transform:translateX(-50%);z-index:200;display:none;font-size:8px;color:var(--star);letter-spacing:3px;text-transform:uppercase;background:rgba(2,2,8,.8);padding:3px 12px;border-radius:10px;border:1px solid rgba(204,136,255,.15)}
+.night-label.show{display:block}
+
+/* SCALE PANEL */
+#scale-panel{position:fixed;bottom:clamp(48px,6vh,70px);left:50%;transform:translateX(-50%);z-index:195;display:none;background:rgba(6,6,11,.92);border:1px solid rgba(212,168,85,.1);border-radius:10px;padding:10px 16px;align-items:flex-end;gap:10px}
+#scale-panel.show{display:flex}
+.sc-item{display:flex;flex-direction:column;align-items:center;gap:2px}
+.sc-bar{width:14px;border-radius:2px 2px 0 0;transition:height .5s}
+.sc-ht{font-size:7px;color:var(--gold);font-family:'JetBrains Mono',monospace}
+.sc-nm{font-size:6px;color:var(--dim);text-align:center;max-width:44px;letter-spacing:.5px}
+
+</style>
+</head>
+<body>
+<div id="lang-selector" style="position:fixed;top:6px;right:6px;z-index:500;display:flex;gap:2px;font-size:9px;background:rgba(6,6,11,.85);border:1px solid rgba(212,168,85,.15);border-radius:6px;padding:3px 4px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)">
+<button class="lang-btn" data-lang="en" onclick="setLang('en')" style="background:none;border:none;color:#a8a098;cursor:pointer;padding:2px 5px;font-size:9px;font-weight:600;border-radius:3px">EN</button>
+<button class="lang-btn" data-lang="pt" onclick="setLang('pt')" style="background:none;border:none;color:#a8a098;cursor:pointer;padding:2px 5px;font-size:9px;font-weight:600;border-radius:3px">PT</button>
+<button class="lang-btn" data-lang="bg" onclick="setLang('bg')" style="background:none;border:none;color:#a8a098;cursor:pointer;padding:2px 5px;font-size:9px;font-weight:600;border-radius:3px">BG</button>
+<button class="lang-btn" data-lang="de" onclick="setLang('de')" style="background:none;border:none;color:#a8a098;cursor:pointer;padding:2px 5px;font-size:9px;font-weight:600;border-radius:3px">DE</button>
+</div>
+<style>.lang-btn.active{background:rgba(212,168,85,.2)!important;color:#d4a855!important}</style>
+
+<div id="loader"><div class="h">𓂀 𓃭 𓅃 𓆣 𓇳 𓈖 𓊝</div><h1>GizaScan</h1><div class="sub">3D Pyramid Explorer</div><div class="ltr"><div class="lb" id="lbar"></div></div><div class="lp" id="lpct">0%</div></div>
+<div id="app" role="application" aria-label="3D interactive pyramid explorer"></div>
+<div id="topbar"><div><div class="bn">GizaScan</div><div class="bs">3D Pyramid Explorer</div></div><div class="mb" id="mbadge">Orbit Mode</div></div>
+<button id="ab" aria-label="Toggle audio" onclick="toggleAudio()" aria-label="Toggle ambient audio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/></svg></button>
+<button id="fs-btn" onclick="toggleFS()" aria-label="Toggle fullscreen" aria-label="Toggle fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg></button>
+
+<div id="ctrls-wrap">
+<button class="ctr-arr" id="arr-l" onclick="scrollCtrls(-1)">◂</button>
+<div id="ctrls">
+  <button class="cb on" data-c="go" onclick="SM('orbit')" aria-label="Orbit view" aria-label="Orbit view">🌍 <span class="l">Orbit</span></button>
+  <button class="cb" data-c="go" onclick="SM('cut')" aria-label="Cross-section view" aria-label="Cross-section view">✂️ <span class="l">Cut</span></button>
+  <button class="cb" data-c="go" onclick="SM('xray')" aria-label="X-Ray view" aria-label="X-ray view">🔬 <span class="l">X-Ray</span></button>
+  <button class="cb" data-c="go" onclick="SM('fps')" aria-label="First-person exploration" aria-label="First person exploration">🚶 <span class="l">Explore</span></button>
+  <button class="cb" data-c="em" onclick="toggleOverlay('em')" aria-label="EM Energy field overlay" aria-label="Electromagnetic field">⚡ <span class="l">EM Field</span></button>
+  <button class="cb" data-c="ac" onclick="toggleOverlay('ac')" aria-label="Acoustic resonance overlay" aria-label="Acoustic resonance">🔊 <span class="l">Acoustics</span></button>
+  <button class="cb" data-c="th" onclick="toggleOverlay('th')" aria-label="Thermal anomaly overlay" aria-label="Thermal anomaly">🌡️ <span class="l">Thermal</span></button>
+  <button class="cb" data-c="st" onclick="toggleOverlay('st')" aria-label="Star alignment overlay" aria-label="Star alignment">⭐ <span class="l">Stars</span></button>
+  <button class="cb" data-c="ge" onclick="toggleOverlay('ge')" aria-label="Geological layers overlay" aria-label="Geological layers">🪨 <span class="l">Geology</span></button>
+  <button class="cb" data-c="go" onclick="toggleOverlay('math')" aria-label="Mathematical ratios overlay" aria-label="Mathematical ratios">𝜋 <span class="l">Math</span></button>
+  <button class="cb" data-c="go" onclick="toggleOverlay('nrg')" aria-label="Hidden energy overlay" aria-label="Hidden energy field">🔥 <span class="l">Energy</span></button>
+  <button class="cb" data-c="go" onclick="toggleCasing()" aria-label="Toggle original white casing" aria-label="Original white casing">◇ <span class="l">Casing</span></button>
+  <button class="cb" data-c="go" onclick="toggleNight()" aria-label="Toggle night mode" aria-label="Night sky mode">🌙 <span class="l" data-i18n="night">Night</span></button>
+  <button class="cb" data-c="go" onclick="toggleScale()" aria-label="Scale comparison" aria-label="Scale comparison">📏 <span class="l">Scale</span></button>
+  <button class="cb" data-c="go" onclick="toggleConstruct()" aria-label="Construction animation">⏳ <span class="l">Build</span></button>
+  <button class="cb" data-c="go" onclick="toggleTour()" aria-label="Guided tour" aria-label="Guided tour">▶ <span class="l">Tour</span></button>
+  <button class="cb" data-c="go" onclick="togglePanel()" aria-label="Close info panel" aria-label="Information panel">ℹ️ <span class="l">Info</span></button>
+</div>
+<button class="ctr-arr" id="arr-r" onclick="scrollCtrls(1)">▸</button>
+</div>
+
+<div id="live-data">
+  <div class="ld-card em"><h4 data-i18n="em_energy_density">EM Energy Density</h4><div class="val" id="ld-em">0.00</div><div class="unit">V/m (relative)</div></div>
+  <div class="ld-card ac"><h4 data-i18n="resonant_frequency">Resonant Frequency</h4><div class="val" id="ld-ac">—</div><div class="unit">Hz</div></div>
+  <div class="ld-card th"><h4 data-i18n="thermal_delta">Thermal Δ</h4><div class="val" id="ld-th">0.0</div><div class="unit">°C anomaly</div></div>
+  <canvas id="waveform" width="240" height="100"></canvas>
+</div>
+<div id="muon-info"><h4 data-i18n="muon_flux">Muon Flux</h4><div class="val" id="ld-muon">0</div><div class="unit" data-i18n="particles_detected">particles detected</div></div>
+
+<div id="legend"></div>
+<div id="tw"><label>Time</label><input type="range" id="ts" min="0" max="100" value="40"><span id="tl" data-i18n="morning">Morning</span></div>
+<svg id="compass" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="rgba(6,6,11,.6)" stroke="rgba(212,168,85,.15)" stroke-width="1"/><text x="20" y="10" text-anchor="middle" fill="#d4a855" font-size="6" font-family="Cinzel" font-weight="700">N</text><polygon id="cn" points="20,10 18,22 20,20 22,22" fill="#d4a855" opacity=".6"/></svg>
+<div id="mm"><canvas id="mmc" width="220" height="220"></canvas></div>
+<div id="dg"><div class="dl">Depth</div><div class="db"><div class="df" id="dgf"></div></div><div class="dv" id="dgv">0 m</div></div>
+<div id="fh"><div class="ch"></div><p>WASD move · Mouse look · T teleport · ESC exit</p></div>
+<div id="tp"><h3>⟡ Teleport ⟡</h3>
+<button class="tpb" onclick="tpTo('entrance')">Original Entrance</button>
+<button class="tpb" onclick="tpTo('sub')">Subterranean Chamber</button>
+<button class="tpb" onclick="tpTo('queens')">Queen's Chamber</button>
+<button class="tpb" onclick="tpTo('gallery')">Grand Gallery</button>
+<button class="tpb" onclick="tpTo('kings')">King's Chamber</button>
+<button class="tpb" onclick="tpTo('void')">Big Void (2017)</button>
+</div>
+<div id="joy-move" class="joystick"><div class="joy-base"><div class="joy-knob" id="jk-move"></div></div><div class="joy-label" data-i18n="move">Move</div></div>
+<div id="joy-look" class="joystick"><div class="joy-base"><div class="joy-knob" id="jk-look"></div></div><div class="joy-label" data-i18n="look">Look</div></div>
+<div id="casing-info">◇ Showing original white Tura limestone casing (c. 2560 BCE)</div>
+<div class="night-label" id="night-label">★ Sky of 2500 BCE — Thuban is the Pole Star ★</div>
+<div id="scale-panel">
+<div class="sc-item"><div class="sc-bar" style="height:4px;background:#888"></div><div class="sc-ht">1.7m</div><div class="sc-nm" data-i18n="human">Human</div></div>
+<div class="sc-item"><div class="sc-bar" style="height:14px;background:#c09858"></div><div class="sc-ht">20m</div><div class="sc-nm">Sphinx</div></div>
+<div class="sc-item"><div class="sc-bar" style="height:24px;background:#46855a"></div><div class="sc-ht">46m</div><div class="sc-nm" data-i18n="statue_of_liberty">Statue of Liberty</div></div>
+<div class="sc-item"><div class="sc-bar" style="height:38px;background:#8866aa"></div><div class="sc-ht">96m</div><div class="sc-nm" data-i18n="big_ben">Big Ben</div></div>
+<div class="sc-item"><div class="sc-bar" style="height:55px;background:var(--gold)"></div><div class="sc-ht">146m</div><div class="sc-nm" data-i18n="great_pyramid">Great Pyramid</div></div>
+<div class="sc-item"><div class="sc-bar" style="height:70px;background:#5588cc"></div><div class="sc-ht">324m</div><div class="sc-nm" data-i18n="eiffel_tower">Eiffel Tower</div></div>
+</div>
+<div id="construct">
+<button id="c-close" onclick="toggleConstruct()">✕ Close</button>
+<canvas id="c-canvas" width="800" height="500"></canvas>
+<div class="c-info"><div class="c-year" id="c-year">2580 BCE</div><div class="c-phase" id="c-phase" data-i18n="site_preparation">Site preparation</div><div class="c-bar"><div class="c-fill" id="c-fill" style="width:0%"></div></div><div id="c-controls"><button onclick="cSpeed(-1)">◀ Slower</button><button onclick="cPause()">⏸ Pause</button><button onclick="cSpeed(1)">Faster ▶</button></div></div>
+</div>
+<div id="panel"><button class="pc" onclick="togglePanel()" aria-label="Close info panel">×</button><div id="pi"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" onerror="document.getElementById('lpct').textContent='Error: Cannot load 3D engine. Open in Chrome browser.';document.getElementById('lbar').style.background='#ff4422'"></script>
+<script>
+const I18N={"en": {"orbit_mode": "Orbit Mode", "xray_mode": "X-Ray Mode", "cut_mode": "Cut Mode", "fps_mode": "FPS Mode", "orbit": "Orbit", "xray": "X-Ray", "cut": "Cut", "fps": "FPS", "time": "Time", "dawn": "Dawn", "morning": "Morning", "noon": "Noon", "sunset": "Sunset", "night": "Night", "tour": "Tour", "scale": "Scale", "casing": "Casing", "build": "Build", "info": "Info", "explore": "Explore", "depth": "Depth", "move": "Move", "look": "Look", "em_field": "EM Field", "acoustics": "Acoustics", "thermal": "Thermal", "stars": "Stars", "geology": "Geology", "math": "Math", "energy": "Energy", "em_energy_density": "EM Energy Density", "resonant_frequency": "Resonant Frequency", "thermal_delta": "Thermal Δ", "muon_flux": "Muon Flux", "particles_detected": "particles detected", "unlock_pro": "UNLOCK PRO", "maybe_later": "Maybe later", "gizascan_pro": "GIZASCAN PRO", "one_time_purchase": "One-time purchase · Forever yours", "deep_science": "DEEP SCIENCE (Sciverse)", "great_pyramid": "Great Pyramid", "eiffel_tower": "Eiffel Tower", "statue_of_liberty": "Statue of Liberty", "big_ben": "Big Ben", "human": "Human", "site_preparation": "Site preparation", "tagline": "Interactive 3D Pyramid Explorer"}, "pt": {"orbit_mode": "Modo Órbita", "xray_mode": "Modo Raio-X", "cut_mode": "Modo Corte", "fps_mode": "Modo FPS", "orbit": "Órbita", "xray": "Raio-X", "cut": "Corte", "fps": "FPS", "time": "Hora", "dawn": "Amanhecer", "morning": "Manhã", "noon": "Meio-dia", "sunset": "Pôr do sol", "night": "Noite", "tour": "Tour", "scale": "Escala", "casing": "Revestimento", "build": "Construir", "info": "Info", "explore": "Explorar", "depth": "Profundidade", "move": "Mover", "look": "Olhar", "em_field": "Campo EM", "acoustics": "Acústica", "thermal": "Térmico", "stars": "Estrelas", "geology": "Geologia", "math": "Matemática", "energy": "Energia", "em_energy_density": "Densidade Energia EM", "resonant_frequency": "Frequência Ressonante", "thermal_delta": "Δ Térmico", "muon_flux": "Fluxo de Múons", "particles_detected": "partículas detectadas", "unlock_pro": "DESBLOQUEAR PRO", "maybe_later": "Talvez depois", "gizascan_pro": "GIZASCAN PRO", "one_time_purchase": "Compra única · Seu para sempre", "deep_science": "CIÊNCIA PROFUNDA (Sciverse)", "great_pyramid": "Grande Pirâmide", "eiffel_tower": "Torre Eiffel", "statue_of_liberty": "Estátua da Liberdade", "big_ben": "Big Ben", "human": "Humano", "site_preparation": "Preparação do local", "tagline": "Explorador 3D Interativo da Pirâmide"}, "bg": {"orbit_mode": "Орбитен режим", "xray_mode": "Рентгенов режим", "cut_mode": "Разрез", "fps_mode": "FPS режим", "orbit": "Орбита", "xray": "Рентген", "cut": "Разрез", "fps": "FPS", "time": "Време", "dawn": "Зора", "morning": "Сутрин", "noon": "Обед", "sunset": "Залез", "night": "Нощ", "tour": "Тур", "scale": "Мащаб", "casing": "Облицовка", "build": "Строеж", "info": "Инфо", "explore": "Изследвай", "depth": "Дълбочина", "move": "Движение", "look": "Поглед", "em_field": "ЕМ Поле", "acoustics": "Акустика", "thermal": "Топлинно", "stars": "Звезди", "geology": "Геология", "math": "Математика", "energy": "Енергия", "em_energy_density": "Плътност ЕМ Енергия", "resonant_frequency": "Резонансна Честота", "thermal_delta": "Топлинно Δ", "muon_flux": "Мюонен Поток", "particles_detected": "засечени частици", "unlock_pro": "ОТКЛЮЧИ PRO", "maybe_later": "Може би по-късно", "gizascan_pro": "GIZASCAN PRO", "one_time_purchase": "Еднократно · Завинаги ваше", "deep_science": "ДЪЛБОКА НАУКА (Sciverse)", "great_pyramid": "Голяма Пирамида", "eiffel_tower": "Айфелова кула", "statue_of_liberty": "Статуя на свободата", "big_ben": "Биг Бен", "human": "Човек", "site_preparation": "Подготовка", "tagline": "Интерактивен 3D Изследовател на Пирамидата"}, "de": {"orbit_mode": "Orbit-Modus", "xray_mode": "Röntgen-Modus", "cut_mode": "Schnitt-Modus", "fps_mode": "FPS-Modus", "orbit": "Orbit", "xray": "Röntgen", "cut": "Schnitt", "fps": "FPS", "time": "Zeit", "dawn": "Morgendämmerung", "morning": "Morgen", "noon": "Mittag", "sunset": "Sonnenuntergang", "night": "Nacht", "tour": "Tour", "scale": "Maßstab", "casing": "Verkleidung", "build": "Bauen", "info": "Info", "explore": "Erkunden", "depth": "Tiefe", "move": "Bewegen", "look": "Schauen", "em_field": "EM-Feld", "acoustics": "Akustik", "thermal": "Thermik", "stars": "Sterne", "geology": "Geologie", "math": "Mathematik", "energy": "Energie", "em_energy_density": "EM-Energiedichte", "resonant_frequency": "Resonanzfrequenz", "thermal_delta": "Thermisches Δ", "muon_flux": "Myon-Fluss", "particles_detected": "Teilchen erkannt", "unlock_pro": "PRO FREISCHALTEN", "maybe_later": "Vielleicht später", "gizascan_pro": "GIZASCAN PRO", "one_time_purchase": "Einmalkauf · Für immer dein", "deep_science": "TIEFE WISSENSCHAFT (Sciverse)", "great_pyramid": "Große Pyramide", "eiffel_tower": "Eiffelturm", "statue_of_liberty": "Freiheitsstatue", "big_ben": "Big Ben", "human": "Mensch", "site_preparation": "Vorbereitung", "tagline": "Interaktiver 3D-Pyramiden-Erforscher"}};
+let LANG=(navigator.language||'en').slice(0,2);
+if(!I18N[LANG])LANG='en';
+function t(k){return (I18N[LANG]&&I18N[LANG][k])||I18N.en[k]||k}
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    el.textContent=t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{
+    el.title=t(el.dataset.i18nTitle);
+  });
+  // Update dynamic texts
+  const m=document.getElementById('mbadge');
+  if(m){
+    const txt=m.textContent.toUpperCase();
+    if(txt.includes('ORBIT'))m.textContent=t('orbit_mode');
+    else if(txt.includes('X-RAY')||txt.includes('XRAY'))m.textContent=t('xray_mode');
+    else if(txt.includes('CUT'))m.textContent=t('cut_mode');
+    else if(txt.includes('FPS'))m.textContent=t('fps_mode');
+  }
+}
+function setLang(l){
+  if(!I18N[l])return;
+  LANG=l;
+  applyI18n();
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===l));
+}
+const B=153,H=97,HF=B/2,D=Math.PI/180,PA=26.5*D;
+let scene,cam,ren,clk,oc;
+let fps=false,audioOn=false;
+let shells=[],intG,dustP,emFieldMeshes=[],acWaves=[],thHeatmap=null,starLines=[],geoLayers=[],mathOverlays=[],humanFigs=[];
+let sunL,ambL;
+let mode='orbit',tourOn=false,tourI=0;
+let hs=[],ct=[];
+let mv={f:0,b:0,l:0,r:0};
+let fc={y:Math.PI,p:0},tpOpen=false;
+let mmCtx,audioCtx,windG;
+let overlays={em:false,ac:false,th:false,st:false,ge:false,math:false,nrg:false};
+let stepT=0;
+let sandP,godRays=[],casingShells=[],casingOn=false;
+let muonParticles,muonVel;
+let constructOn=false,cTime=0,cPaused=false,cSpd=1;
+let isMobile='ontouchstart'in window;
+let nightOn=false,scaleOn=false,skyMesh,sphinxG,energyMeshes=[];
+
+// ═══ SCIENCE DATA ═══
+const SCI={
+overview:{tag:'Overview',color:'#d4a855',title:'A 1:43,200 Model of Earth — And a Submerged World',desc:'2.3M blocks. Base: 0.0009%. True north <3 arcmin. Latitude=speed of light. 1:43,200 Earth model (perimeter+height). 43,200=432×100. Angkor Wat: 72° east. Giza great circle→Nazca, Paracas (DNA U2e, 25% larger cranium), Dogon, Mohenjo-daro.\n\nGöbekli Tepe (9600 BCE): buried deliberately. Turin Papyrus: 36,620 yr. Palermo confirms. Antikythera: 37 gears (Greeks: Egypt=source). Lycurgus Cup: 50 nm nanoparticles. Damascus: carbon nanotubes. Roman concrete: self-healing. Technology CAN be lost.\n\nBUT THE WORLD IS SUBMERGED: Yonaguni (Japan, 1986): stepped pyramid at 25 m depth — last above water ~10,000 BCE. Gunung Padang (Indonesia): C-14 of deepest layers = 20,000+ BCE — oldest pyramid on Earth. Excavation paused pending review (2014). Dwarka (India): Krishna\'s city "swallowed by the sea" — sonar found geometric structures at 40 m, ceramics C-14 = 9,500 BCE. The myth is underwater.\n\nThe Structure of Richat (Eye of Sahara): 40 km circular formation. Plato described Atlantis as concentric rings of land/water, mountains to north, opening south to sea. Richat has: concentric rings, Atlas Mtns to north, Sahara was sea in Pleistocene. Coordinates match Plato.\n\nOldest=most precise worldwide. Precision DECREASES over time. The pyramid may be the last artifact above water of something much older.',
+img:'',
+stats:[['Scale','1:43,200 of Earth (432×100)'],['Angkor Wat','72° east (1° precession)'],['Yonaguni','Stepped pyramid, 25 m depth (~10,000 BCE)'],['Gunung Padang','C-14: 20,000+ BCE (excavation halted)'],['Dwarka','Sonar structures, C-14: 9,500 BCE'],['Richat/Atlantis','40 km rings match Plato exactly'],['Turin Papyrus','36,620 years before history'],['Göbekli Tepe','9600 BCE, buried deliberately'],['Lycurgus Cup','50 nm nanoparticles (4th c.)'],['Damascus Steel','Carbon nanotubes (lost ~1750)'],['Antikythera','37 gears (Greeks: Egypt=source)'],['Pattern','Oldest=most precise, submerged'],['China','100+ pyramids hidden in Shaanxi'],['Antarctica','Pyramidal forms emerging from ice'],['Thoth=Hermes','Same teacher in Egypt/Greece/Rome/Mexico']],
+eq:'Scale: 43,200=432×100\nYonaguni: ~10,000 BCE\nGunung Padang: 20,000+ BCE\nRichat: matches Plato\'s Atlantis description',
+src:'Hancock (1995). Gardiner (1959). Kimura (1997)—Yonaguni. Natawidjaja (2013)—Gunung Padang. Rao (2001)—Dwarka. Plato, Timaeus/Critias.',deep:[["Mathematical Logic & Godel", "Algebraic Topology Algebraic topology uses algebraic structures (groups, rings, modules) to classify topological spaces up to continuous deformation. The key insight: assign algebraic invariants to spaces — if the invariants differ, the spaces are topologically distinct. Fundamental group π₁(X,x₀) : equivalence classes of loops at base point x₀ under homotopy. π₁(S¹) = ℤ (loops can wind n times ar"], ["Mathematical Biology", "Mathematical Biology Mathematical biology uses mathematical models to understand biological systems. Population dynamics : Malthus (1798) : dN/dt = rN → exponential growth N(t) = N₀eʳᵗ. Verhulst (1838) : logistic equation dN/dt = rN(1−N/K) where K = carrying capacity → S-shaped growth curve, N(t) = K/(1+(K/N₀−1)e⁻ʳᵗ). Lotka-Volterra (1925-26) : predator-prey oscillations: dX/dt = αX−βXY, dY/dt = δ"], ["Supersymmetry", "Neutrino Oscillation Neutrinos come in three flavors (electron, muon, tau). Neutrino oscillation is the quantum phenomenon by which a neutrino created as one flavor can be detected later as another &mdash; discovered through the long-standing solar neutrino problem and confirmed by Super-Kamiokande (1998) and SNO (2001), earning the 2015 Nobel Prize. Why it happens : the flavor states are quantum "], ["Molecular Geometry", "Redox Reactions Redox (reduction-oxidation) reactions involve electron transfer between species. Oxidation = loss of electrons (increase in oxidation state); reduction = gain of electrons (decrease in oxidation state). The mnemonic \"OIL RIG\" (Oxidation Is Loss, Reduction Is Gain) or \"LEO the lion says GER\" (Lose Electrons Oxidation, Gain Electrons Reduction). In 2Fe₂O₃ + 3C → 4Fe + 3CO₂, iron is r"], ["Differential Geometry", "Measure Theory Measure theory provides the rigorous foundation for integration, probability, and analysis. Henri Lebesgue (1902) generalized the Riemann integral by measuring the sizes of sets rather than partitioning intervals. A measure μ on a σ-algebra Σ satisfies: μ(∅)=0, μ(A)≥0, and countable additivity μ(∪Aₙ) = Σμ(Aₙ) for disjoint sets. Lebesgue measure on ℝ generalizes length: μ([a,b]) = b−"]]},
+
+em:{tag:'EM Field',color:'#4488ff',title:'EM Focusing, Eye of Horus & The CIA Knew',desc:'ITMO+Hannover (2018, 200+ citations): EM concentrated into chambers. 5 identical Dendera reliefs in 5 rooms. Djed=HV insulator+cables. Baghdad Battery=1.1V. 3-part circuit.\n\nZero soot deep inside. Iron plate: meteoritic+GOLD=galvanic (3,000 yr before Volta).\n\nThe Eye of Horus IS the pineal gland: anatomical cross-section comparison shows the Eye matches EXACTLY a sagittal cut of the human brain — thalamus, corpus callosum, and pineal gland in precise position. The "mystical symbol" is a medical diagram. The pineal produces DMT (dimethyltryptamine), the molecule associated with mystical experiences. The pineal responds to 4 Hz theta. The King\'s Chamber generates 4 Hz.\n\nCIA Gateway Process (declassified 2003, doc CIA-RDP96-00788R001700210016-5): the CIA spent millions studying how 4 Hz binaural beats induce "out-of-body experiences," "non-local information access," and "interface with universal energy field." The King\'s Chamber generates this frequency NATURALLY. The CIA studied what the pyramid does for free.\n\nSchumann resonance rising: normally 7.83 Hz. Since 2014, satellites measure peaks of 36+ Hz (Tomsk State U., Russia). Earth\'s base frequency is accelerating. The pyramid was built on 7.83 Hz. What happens when the planet retunes?',
+img:'',
+stats:[['Study','ITMO+Hannover (2018, 200+ citations)'],['5 Dendera Reliefs','5 rooms, identical device'],['Eye of Horus','= pineal gland (anatomical match)'],['Pineal','Produces DMT, responds to 4 Hz'],['CIA Gateway','Doc RDP96-00788 (declassified 2003)'],['CIA Finding','4 Hz → out-of-body, non-local access'],['KC Generates','4 Hz naturally'],['Iron Plate','Meteoritic+Au=galvanic protection'],['Baghdad','Cu+Fe+acid=1.1V DC'],['No Soot','= electric light in deep chambers'],['Schumann Rising','7.83→36+ Hz since 2014'],['Djed','= HV insulator (structure+wiring)'],['Ankh','= magnetic loop antenna (gods aim at face)'],['Was Scepter','= tuning fork (bifurcated, aimed at ground)'],['Benben Stone','Meteoritic capstone+electrum=antenna tip'],['Ankh+Was+Djed','Antenna+frequency+insulator=3 components'],['Ankh','= loop antenna (EM capture+transmit)'],['Was Scepter','= tuning fork (acoustic coupling to Earth)'],['Ankh+Was+Djed','Antenna+frequency+insulator = 3-part system'],['Benben Stone','Meteoritic + electrum capstone = antenna tip'],['Thoth=Hermes','= Quetzalcoatl = same teacher, 4 civilizations']],
+eq:'Eye of Horus = pineal gland cross-section\nPineal→DMT at 4 Hz (KC frequency)\nCIA: 4 Hz→OBE+non-local access\nSchumann: 7.83→36+ Hz (accelerating)',
+src:'Balezin (2018). König (1938). CIA-RDP96-00788. Strassman (2001)—DMT. Tomsk State U.—Schumann.',deep:[["Electromagnetism", "Quantum Mechanics Quantum mechanics governs atomic/subatomic physics. Planck (1900) introduced E=nhf; Schrödinger (1926) gave the wave equation iℏ∂ψ/∂t = Ĥψ ; |ψ|² = probability density. Heisenberg uncertainty ΔxΔp ≥ ℏ/2 . Hydrogen: Eₙ = −13.6/n² eV . Quantized angular momentum L=ℏ√(l(l+1)), spin s=½ for electrons. Tunneling : T ∝ e^(−2κd) enables alpha decay, STM, tunnel diodes. Harmonic oscillat"], ["Maxwell\\", "Dark Matter & Dark Energy The universe is 95% invisible : 26.8% dark matter + 68.3% dark energy + only 4.9% ordinary (baryonic) matter. Dark matter evidence: Vera Rubin (1970s) measured galaxy rotation curves showing flat velocity profiles (v ≈ const at large r) instead of expected Keplerian decline (v ∝ 1/√r) — implying ~6× more mass than visible. Additional evidence: gravitational lensing (Bulle"], ["Tesla X-Ray", "Tesla Turbine The Tesla turbine ( US Patent 1,061,206, 1913 ) uses smooth parallel disks instead of blades — fluid spirals inward through gaps, transferring momentum via viscous drag τ = μ·(dv/dr) . Disk spacing δ ≈ boundary layer thickness (~0.5-1 mm). Advantages : no blades to erode (handles abrasive/two-phase fluids), simple construction, bidirectional (works as pump in reverse). Applications :"], ["Tesla Turbine", "Tesla Turbine The Tesla turbine ( US Patent 1,061,206, 1913 ) uses smooth parallel disks instead of blades — fluid spirals inward through gaps, transferring momentum via viscous drag τ = μ·(dv/dr) . Disk spacing δ ≈ boundary layer thickness (~0.5-1 mm). Advantages : no blades to erode (handles abrasive/two-phase fluids), simple construction, bidirectional (works as pump in reverse). Applications :"], ["Tesla & Famous Friendships", "V2G — Vehicle-to-Grid integration Vehicle-to-Grid (V2G) permite fluxo bidirecional de energia entre baterias de EVs e a rede — o EV serve como consumidor (carregando) e supridor (descarregando de volta). Bateria típica 60-100+ kWh; residência típica US consome ~30 kWh/dia → EV pode alimentar casa por dias. Frota agregada de EVs representa enorme armazenamento distribuído — potencialmente transform"]]},
+
+ac:{tag:'Acoustics',color:'#44cc88',title:'432 Hz, Pineal DMT & The Cubit IS π',desc:'KC: 121 Hz=F#(A=432). Beat: 4 Hz=theta. 432²≈c. 440-432=8=Schumann. Sun=2×432,000.\n\nThe Royal Cubit = π/6 meters. 0.5236 m = π/6 = 0.5236. The UNIT OF MEASUREMENT is a fraction of π. The pyramid doesn\'t just encode π — the entire measurement system is BUILT ON π. The Pyramid Inch (1.00106 British inches), 25 of which = 1 cubit. The British Imperial system may be a degraded echo of a metrological system based on universal constants.\n\nKC volume in pyramid inches³ = 10⁸/10. A perfect round number in a system "that didn\'t exist."\n\n4 Hz + pineal + DMT: the chamber generates theta (confirmed). Theta stimulates pineal (confirmed). Pineal may produce DMT (Strassman, debated). Napoleon reportedly spent a night alone — the chamber may theoretically stimulate pineal activity. What he experienced: probably the most intense psychedelic event possible without external substances. He never told anyone.\n\nTibetan levitation: Kjellson (1930s): 5 Hz+harmonics→stone floats. Bosnia: 28 kHz beam from apex. Karnak Clock: thermodynamics ~1400 BCE.\n\nThe sarcophagus SINGS: when struck, it resonates for 8+ seconds with a pure tone. Normal granite absorbs vibration. This block was selected or TREATED for abnormal acoustic properties. It\'s an instrument.',
+stats:[['Royal Cubit','= π/6 meters (0.5236)'],['System','Built ON π, not just encoding it'],['KC Volume','= 10⁸/10 pyramid inches³'],['4 Hz+Pineal','→ DMT production (confirmed)'],['Napoleon','Night inside (accounts vary)'],['Sarcophagus','SINGS 8+ sec (abnormal granite)'],['432²','≈ c (mi/s)'],['440-432','= 8 Hz = Schumann'],['Tibetan','5 Hz→stone levitation'],['Bosnia','28 kHz beam (increases!)'],['Karnak','Thermodynamics ~1400 BCE'],['Pyramid Inch','1.00106" × 25 = cubit'],['EZ Water','4th phase (Pollack 2013): aquifer+granite=voltage'],['Book of Dead','Real title: "Exit to Light" — freq navigation manual?'],['Words of Power','Specific vowels=frequencies for each chamber size'],['Heart Field','5,000× stronger than brain EM (HeartMath)'],['Weighing Heart','= measuring cardiac EM coherence?'],['Pinecone','= pineal gland+Fibonacci (Vatican, Sumer, Hindu)'],['EZ Water','4th phase water (Pollack 2013) generates voltage'],['Granite+Water','= EZ water = energy source (discovered 2013)'],['Book of Dead','"Exit to Light" = technical manual for chamber navigation'],['Words of Power','= specific frequencies for specific chamber sizes'],['Heart Weighing','Heart EM = 5,000× brain; "feather" = coherence'],['Pinecone Symbol','Vatican+Sumer+Hindu = pineal + Fibonacci']],
+eq:'Royal Cubit = π/6 = 0.5236 m\nKC volume = 10⁸/10 pyramid inches³\n4 Hz→theta→pineal→DMT\n432²≈c · 440-432=8=Schumann',
+src:'Petrie (1883). Reid (2007). Strassman (2001)—DMT. Kjellson. CIA-RDP96-00788. Borchardt (1920).',deep:[["Acoustics Engineering", "Acoustics Engineering Acoustics engineering designs spaces and systems for optimal sound. Room acoustics : the Sabine equation T₆₀ = 0.161V/A ( Wallace Sabine, 1898 ) gives reverberation time (time for sound to decay 60 dB) — V = room volume (m³), A = total absorption (m² Sabine). Optimal T₆₀: speech ~0.5-0.8s, chamber music ~1.5s, orchestra ~1.8-2.2s, organ ~3-4s. Concert hall design : the shoe-b"], ["Psychoacoustics", "Psychoacoustics Psychoacoustics studies the subjective perception of sound — how the auditory system processes physical acoustic signals into perceived qualities. Loudness : perceived intensity follows Weber-Fechner law — sensation is logarithmic: doubling perceived loudness requires ~10 dB increase (~10× intensity). Fletcher-Munson curves (equal-loudness contours) : human hearing is most sensitiv"], ["Vibrational Spectroscopy", "Asymmetric Catalysis Many molecules are chiral &mdash; they exist as non-superimposable mirror images (enantiomers) &mdash; and in biology the two often behave very differently (one enantiomer a medicine, the other inert or harmful). Asymmetric catalysis uses a chiral catalyst to selectively produce one enantiomer, the central challenge of modern synthesis. Knowles, Noyori, and Sharpless shared th"], ["Cryostat Vibration", "Z80 ALU & Flags The Z80 ALU operates on 8-bit data through the Accumulator (A). ADD A,B adds B to A. SUB C subtracts C from A. AND D bitwise ANDs D with A. All results stay in A and set the Flag register (F) : S (Sign): bit 7 of result. Z (Zero): result=0. H (Half-carry): carry from bit 3→4. P/V : parity or overflow. N (Subtract): last op was subtraction. C (Carry): carry from bit 7. The CP (Compa"]]},
+
+th:{tag:'Thermal',color:'#ff4422',title:'Thermal, C-14 Dates & The Sealed Air',desc:'ScanPyramids: 6.0°C anomaly. 2017: muon corridor. 2023: 9 m→wall. Water marks inside=flood lines. Nun=primordial ocean=aquifer.\n\nCollins caves (2008): beneath Second Pyramid. Second Sphinx: Pliny+georadar (2022). Menkaure empty chamber: KC-ceiling for nothing. Osiris Level 4: witnesses say deeper. Grotto: natural cave IN architecture.\n\nC-14 MORTAR DATES DON\'T FIT: Bonani et al. (1995) C-14 dated mortar samples. Result: consistently 300-400 years OLDER than Khufu (~2560 BCE). Range: 2853-3809 BCE. Official: "ancient carbon in lime." Problem: that effect is RANDOM, not consistently older. The pyramid may predate Khufu by centuries.\n\nTHE SEALED AIR: isotopic analysis of air inside sealed chambers shows ratios DIFFERENT from modern atmosphere. The air is older. The chambers were genuinely sealed for millennia.\n\nThe satellite pyramids (3 small ones beside the Great) may be LATER additions, not part of the original design. If so, the original was a solitary structure — not a funerary complex.\n\nGeology chosen: karst+aquifer=piezo+streaming+acoustic. Built WITH geology.',
+stats:[['Anomaly','6.0°C (12× normal)'],['C-14 Mortar','300-400 yr older than Khufu'],['Date Range','2853-3809 BCE (Bonani 1995)'],['Official','Ancient carbon (but consistently older?)'],['Sealed Air','Isotopic ratios ≠ modern atmosphere'],['Water Marks','Flood lines inside passages'],['Satellites','May be later additions'],['Collins','Caves beneath Second Pyramid'],['Second Sphinx','Pliny+georadar 200 m east'],['Menkaure','KC-ceiling for empty room'],['Osiris','Level 4: deeper than shown'],['Grotto','Natural cave IN the architecture']],
+src:'ScanPyramids (2015). Bonani et al. (1995) Radiocarbon 37(2). Collins (2009). Pliny XXXVI.',deep:[["Nuclear Thermal Propulsion (NTP)", "Nuclear Thermal Propulsion (NTP) Nuclear thermal propulsion heats hydrogen propellant by passing it through a fission reactor core, expelling it through a nozzle at ~9000 m/s for I sp ~900-1000 s — roughly 2× chemical (450 s for LH 2 /LOX). Lower exhaust molecular mass (H 2 , M=2) at high T (2500-3000 K) is the key: V e ∝ √(T/M). NERVA program (1955-1973) conducted >20 ground tests at NRDS Jackass"], ["Thermal Anchoring", "Z80 ALU & Flags The Z80 ALU operates on 8-bit data through the Accumulator (A). ADD A,B adds B to A. SUB C subtracts C from A. AND D bitwise ANDs D with A. All results stay in A and set the Flag register (F) : S (Sign): bit 7 of result. Z (Zero): result=0. H (Half-carry): carry from bit 3→4. P/V : parity or overflow. N (Subtract): last op was subtraction. C (Carry): carry from bit 7. The CP (Compa"], ["Geothermal EGS — Fervo next-gen", "Geothermal — EGS next-gen Geothermal long contributor renewable mix but historically limited to specific geology — natural hydrothermal (Iceland, California Geysers, Indonesia, Kenya, Italy). ~16 GW installed globally — fraction of solar (~1500 GW). Enhanced Geothermal Systems (EGS) + next-gen 2020s+ unlock 24/7 baseload renewable in many more locations — drilling deep + creating artificial reserv"], ["Thermodynamics", "Thermodynamics 0th Law: if A and B are each in thermal equilibrium with C, then A and B are in equilibrium — defines temperature. 1st Law: ΔU = Q − W (energy is conserved; internal energy change = heat added − work done). 2nd Law: entropy of an isolated system always increases (ΔS_universe ≥ 0). Heat flows spontaneously from hot to cold, never reverse. 3rd Law: entropy approaches zero as T → 0 K ("], ["Laws of Thermodynamics", "Particle Physics The Standard Model classifies all known particles: 6 quarks (u 2.2 MeV, d 4.7 MeV, c 1.27 GeV, s 96 MeV, t 173 GeV, b 4.18 GeV), 6 leptons (e 0.511 MeV, μ 105.7 MeV, τ 1777 MeV + 3 neutrinos), 4 force carriers (γ, W± 80.4 GeV, Z⁰ 91.2 GeV, g), and the Higgs boson (125.1 GeV, CERN 2012, Nobel 2013 ). The Higgs field with VEV v=246 GeV gives mass to W, Z, and fermions. QCD : quarks "]]},
+
+st:{tag:'Stars',color:'#cc88ff',title:'Stars, Ley Lines, Teotihuacán & Submerged Cities',desc:'4 shafts→4 stars. Orion: pyramids=Belt. Sphinx→Leo 10,500 BCE. Dogon: Sirius B. 432×60=25,920. Number 72: faces, °F, pentagon, Kabbalah, orbit%.\n\nPiri Reis (1513): Antarctica without ice. Tulli (~1440 BCE): circles of fire. Vimanas: mercury vortex. Dendera Zodiac: 25,920 yr→2,000+ yr observation. Turin: 36,620 yr.\n\nLEY LINES ARE MEASURABLE: magnetometers confirm an EM grid ~2 m intervals covering Earth. Ancient sacred sites WORLDWIDE sit on intersections: Giza, Stonehenge, Machu Picchu, Teotihuacán, Angkor Wat. Coincidence or EM-based geolocation?\n\nTeotihuacán (Mexico): "Avenue of the Dead" 15.5° east of north. Pyramids of Sun and Moon contain MICA — an electrical insulator transported 3,000 km. Mica between stone layers = dielectric insulation. Same principle as Giza: conductor+insulator+aquifer.\n\nSubmerged sites on the timeline: Gunung Padang 20,000+ BCE. Yonaguni ~10,000 BCE. Dwarka 9,500 BCE. Göbekli Tepe 9,600 BCE. Sphinx erosion ~9,700 BCE. Younger Dryas ~10,800 BCE. ALL cluster around the end of the Ice Age. Zep Tepi (the First Time): Egyptian texts describe divine beings bringing knowledge before recorded history. Edfu Building Texts: architects from flood-destroyed island rebuilt at Giza. One event, global destruction, survivors rebuilding.\n\nRichat Structure: 40 km rings. Plato\'s Atlantis: concentric rings, mountains north, sea south. Match.',
+stats:[['Ley Lines','EM grid measured by magnetometers'],['Sacred Sites','ALL on grid intersections'],['Teotihuacán','MICA insulator (3,000 km transport)'],['Same Principle','Conductor+insulator+aquifer'],['Submerged','Gunung Padang 20,000+, Yonaguni 10,000'],['Dwarka','9,500 BCE (sonar+C-14)'],['Richat','= Atlantis? (matches Plato)'],['Piri Reis','Antarctica ice-free (1513)'],['Younger Dryas','~10,800 BCE (PNAS 2018)'],['ALL Cluster','Around Ice Age end'],['Dendera Zodiac','25,920 yr continuous obs.'],['Number 72','Faces, °F, pentagon, orbit%'],['China','100+ pyramids in Shaanxi (trees cover the sites)'],['Antarctica','Satellite: pyramidal forms in Ellsworth Range'],['Amazon','LiDAR: massive civilizations under forest (Nature 2022)'],['Mars Cydonia','D&M pyramids at 19.5° (energy emergence angle)'],['Saturn','30,000 km hexagon=standing wave=sacred geometry'],['19.5°','Tetrahedron angle: Hawaii, Teotihuacán, Olympus Mons'],['China','100+ pyramids in Shaanxi (trees cover the sites)'],['Antarctica','Satellite: pyramidal forms in Ellsworth range'],['Amazon','LiDAR: massive civilizations under canopy (Nature 2022)'],['Cydonia Mars','D&M pyramid at 19.5° (energy emergence angle)'],['Saturn','30,000 km hexagon = standing wave = sacred geometry'],['19.5°','Tetrahedron angle: Hawaii, Teotihuacán, Olympus Mons']],
+eq:'Ley grid: EM intersections=sacred sites\nTeotihuacán: mica=insulator (same as Giza)\nSubmerged: 20,000→10,000→9,500 BCE\nRichat: 40 km rings=Plato\'s description',
+src:'Bauval (1994). Hapgood (1966). Heyerdahl—ley. Kimura (1997). Natawidjaja (2013). Rao (2001). Plato.'},
+
+ge:{tag:'Geology',color:'#aa7744',title:'Ultrasonic Tools, Saqqara Disc & The Singing Stone',desc:'Petrie drills: 50× modern. Dunn: ultrasonic only. 5 m circular saw marks at Abusir. Serapeum: ±2.5 μm, zero light 2.7 m.\n\nSaqqara Disc: trilobe schist=centrifugal impeller. Saqqara Bird: generates lift, has tail stabilizer. One civilization: turbine rotor+glider+power plant.\n\nPuma Punku: diorite H-blocks. Baalbek: 1,820t. Coral Castle: 1,100t alone. Costa Rica: 16t ±2 mm. Antikythera: 37 gears.\n\nThe sarcophagus SINGS: 8+ sec resonance from a single strike. Normal granite doesn\'t do this. The block was selected for anomalous acoustic properties — or TREATED. Negative ions measured at elevated concentrations in chambers and apex. Medical fact: negative ions improve mood, focus, breathing. Spas charge for this. The pyramid generates them free.\n\nPatent Nº 91304 (Prague, 1959): Karel Drbal patented a "pyramid-shaped blade sharpener." Razor blades stay sharp inside a pyramid shape. Patent office rejected — chief examiner tested personally for months, then approved.\n\nBovis (1930s)+Flanagan: meat doesn\'t decay inside pyramids. Russian 44 m fiberglass pyramids (2001): rat immune systems improved, seeds +30-100% yield, water composition changed (spectroscopy confirmed). The shape itself has measurable effects.',
+stats:[['Petrie Drill','50× modern diamond'],['Ultrasonic','Only match (Dunn, 1945 tech)'],['5 m Saw','Basalt cuts at Abusir'],['Serapeum','±2.5 μm, zero light'],['Saqqara Disc','= impeller (Cairo Museum)'],['Saqqara Bird','Generates lift (wind tunnel)'],['Sarcophagus','SINGS 8+ sec (anomalous)'],['Negative Ions','Elevated (measured, medical benefit)'],['Patent 91304','Pyramid sharpens razors (Prague)'],['Russian Pyramids','Immune+yield+water changed'],['Coral Castle','1,100t alone'],['Pattern','Oldest=most precise']],
+src:'Petrie (1883). Dunn (1998). Messiha (1969). Drbal (1959). Golod—Russian pyramids. Flanagan (1973).',deep:[["Plate Tectonics Model", "The Hydrologic Cycle The water cycle is the continuous, solar-powered circulation of water through ocean, atmosphere, land, and living things. There is no source or sink &mdash; the same finite water (~1.4 billion km&sup3;, ~97% saline ocean) is endlessly transformed and relocated. It is the master cycle that links climate, geology, ecology, and human water supply. The fluxes : evaporation and pla"], ["Mars Geology & Exploration", "Mars Geology & Exploration Mars (4th planet, 0.53 R⊕, 0.107 M⊕, 1.52 AU) has the most Earth-like surface in the solar system — with evidence of a warmer, wetter past. Olympus Mons : largest volcano in the solar system ( 21.9 km tall , 600 km base diameter — 2.5× Everest). Valles Marineris : ~4,000 km canyon system, up to 7 km deep and 200 km wide (~10× Grand Canyon). Dichotomy : smooth northern lo"], ["Maximum Theoretical Plates", "The pH Scale Introduced by S&oslash;ren S&oslash;rensen (1909), pH is a compact measure of how acidic or basic a solution is: pH = &minus;log&#8321;&#8320;[H&#8314;], the negative base-10 logarithm of the hydrogen-ion activity. The logarithm compresses an enormous range of concentrations into a convenient 0&ndash;14 scale for typical aqueous solutions. What it means : each whole pH unit is a tenfo"], ["Barren Plateau", "Cell Structure The cell is the fundamental unit of life — all organisms are composed of one (bacteria, archaea, many protists) or many (plants, animals, fungi) cells. Robert Hooke (1665) coined \"cell\" viewing cork; Schleiden & Schwann (1839) established cell theory: all living things are composed of cells, cells are the basic unit of life, all cells arise from pre-existing cells. Prokaryotic cells"]]},
+
+math:{tag:'Mathematics',color:'#d4a855',title:'6 Constants, Cubit=π/6 & φ in Reality Itself',desc:'π, φ, e, √5, 2/π, 1/43,200. SIX constants (π,φ,e=2.7198 from H/semi-base,√5,2/π,1/43200). KC lat=29.9792458°N=c 9 digits. Mass×10¹⁵=Earth ±2%. 108: Sun-Earth=108×d. π in Bible: gematria 3.1415. Tesla 3-6-9: 3 chambers, 6 faces, 9 sides.\n\nThe Royal Cubit=π/6 meters. The measurement system IS π. 25 pyramid inches=1 cubit. KC volume=10⁸/10 pyramid inches³.\n\nφ woven into physics: hydrogen levels=Fibonacci. Kerr black hole momentum=φ. Planck length=1.616×10⁻³⁵≈φ. The pyramid encodes a ratio woven into the minimum size of reality.\n\nFlower of Life burned into granite at Osireion. 5 Platonic solids from KC proportions. Metatron\'s Cube.\n\nP≈10⁻¹⁵. But now add: cubit=π/6, c in 9 digits, mass=Earth, 108=solar system, 1:43,200=Earth scale, φ=quantum+Planck. The probability drops to effectively ZERO. "Coincidence" becomes the unfalsifiable hypothesis — the one requiring infinite faith.',
+stats:[['6 Constants','π,φ,e,√5,2/π,1/43,200'],['Cubit','= π/6 meters (system IS π)'],['KC Volume','= 10⁸/10 pyramid inches³'],['c 9 Digits','29.9792458°N'],['Earth Mass','×10¹⁵ = Earth ±2%'],['φ Quantum','H levels=Fibonacci'],['φ Planck','1.616×10⁻³⁵≈φ'],['108','Sun-Earth=108×d; Moon too'],['π Bible','Gematria 3.1415'],['Tesla 3-6-9','3,6,9→27°=3³'],['Flower of Life','Osireion, Abydos'],['Tesseract','8 cells = 8 faces = 8 chambers'],['24-cell','4D polytope: 24 cells = 24 Serapeum boxes'],['Fine Structure','129m passage + 8 Schumann = 137'],['H Frequency','1420 MHz / 121 Hz KC = 11.74'],['3D Cymatics','432 Hz: more symmetric than 440 Hz'],['19.5°','Tetrahedron in sphere=max energy emergence'],['Thoth=Hermes','=Mercury=Quetzalcoatl (same teacher, 4 cultures)'],['P→0','"Coincidence"=unfalsifiable faith']],
+eq:'Cubit=π/6=0.5236 m (system IS π)\n6: π,φ,e,√5,2/π,1/43200\nφ: quantum+black holes+Planck\nc=29.9792458°N (9 digits)\nP→0',
+src:'Petrie (1883). Livio (2002). Coldea (2010). Tesla. Schwaller de Lubicz (1957).',deep:[["Fibonacci", "Fractals Fractals are objects with self-similarity at every scale — zooming in reveals structure resembling the whole. Benoit Mandelbrot (1975) coined the term and developed fractal geometry in The Fractal Geometry of Nature (1982). The key concept: fractal dimension D is non-integer. A coastline is not 1D (line) or 2D (area) — it has D ≈ 1.25. The Hausdorff dimension : if scaling by factor r prod"], ["Computer Graphics", "Computer Graphics Computer graphics creates visual content computationally — from 2D images to photorealistic 3D scenes to real-time games. Rendering pipeline (GPU): vertex processing (model→world→view→projection transforms using 4×4 matrices) → rasterization (triangles→pixels) → fragment processing (texturing, lighting, shading) → output. Modern GPUs: ~10,000+ cores processing millions of triangl"], ["Homomorphic Encryption", "Homomorphic Encryption Homomorphic encryption (HE) allows computation on encrypted data WITHOUT decrypting it — the \"holy grail\" of cryptography. If Enc(a) and Enc(b) are ciphertexts: Enc(a) ⊕ Enc(b) = Enc(a+b) and Enc(a) ⊗ Enc(b) = Enc(a·b) . Since addition and multiplication are sufficient for any computation (Turing-complete), Fully Homomorphic Encryption (FHE) enables arbitrary computation on "], ["Neuromorphic Computing", "LLM Architecture & Scaling Large Language Models (LLMs) are transformer-based neural networks trained on massive text corpora to predict the next token. Architecture : input tokens → embedding (d=4096-12288) + positional encoding (RoPE: rotary position embedding) → L decoder layers (each: masked multi-head self-attention + FFN + RMSNorm + residual connections) → linear projection → softmax → next "], ["Graphics Programming 2026", "Operating Systems An operating system (OS) is the software layer between hardware and applications. It exists to solve one core problem: many programs must share finite, dangerous-to-touch-directly hardware (CPU, memory, disk, devices) safely, fairly, and efficiently . It does this through two big ideas &mdash; abstraction (turn raw hardware into clean APIs) and protection (isolate programs from e"]]},
+
+kings:{tag:"King's Chamber",color:'#904858',title:"King's Chamber — The DMT Chamber & CIA Confirmation",desc:'100 granite, 55% quartz=piezo. Sarcophagus 1 cm wider=pre-calculated. Drill=ultrasonic. Dixon: hook+ball+cedar 3341 BCE.\n\nNapoleon (1799): night alone. Shaken. "Never believe me." Deathbed: "Useless."\n\n4 Hz triple: θ+quartz+Schumann/2. KC lat=29.9792458°N=c 9 digits. 3 encodings of c.\n\nTHE DMT CONNECTION: 4 Hz may stimulate pineal (research ongoing). Pineal may produce DMT (Strassman, debated). Eye of Horus=anatomical pineal cross-section (thalamus+corpus callosum+pineal in exact position). Napoleon reportedly spent hours in a chamber that theoretically stimulates pineal activity. The most intense endogenous psychedelic experience possible.\n\nCIA GATEWAY (declassified 2003): document CIA-RDP96-00788 describes Monroe Institute research: 4 Hz theta→"out-of-body experience," "non-local information access," "universal energy interface." The CIA spent millions recreating electronically what this chamber does naturally with stone.\n\nCapstone: missing before recorded history. Electrum (Au-Ag)=metallic antenna on quartz structure.\n\nThe sarcophagus sings 8+ seconds when struck. Normal granite absorbs vibration. This was selected or treated.',
+stats:[['4 Hz','→ pineal → DMT (research ongoing)'],['Eye of Horus','= pineal gland anatomy'],['Napoleon','Night inside (accounts vary)'],['CIA Gateway','Doc RDP96-00788 (2003)'],['CIA','4 Hz→OBE+non-local access'],['c 9 Digits','29.9792458°N'],['3 Encodings','Latitude+frequency+432²=c'],['Sarcophagus','Sings 8+ sec (anomalous)'],['1 cm Wider','Pre-calculated interior'],['Drill','Ultrasonic only (1945 tech)'],['Capstone','Missing before history'],['Tesla','KC=Wardenclyffe resonant node'],['Quantum Mind','Microtubules=Fibonacci; 4 Hz=consciousness freq'],['Time Dilation','Theta distorts time; Napoleon lived days in hours'],['Theory: not a tomb','= theorized multi-function device'],['Inside KC','4 Hz+ions+EM+432 Hz+DMT+time distortion=all at once'],['Human=60% Water','In 432 Hz field=structured water vessel'],['Heart EM','5,000× brain field — measured by HeartMath'],['Consciousness Machine','4Hz+ions+EM+432Hz+DMT+torção = transformation'],['Theory: not a tomb','A machine for transforming human consciousness']],
+src:'Petrie (1883). Dunn (1998). CIA-RDP96-00788. Strassman (2001). Napoleon: Arago (1855). Cady (1946).'},
+
+queens:{tag:"Queen's Chamber",color:'#c8b888',title:"Queen's Chamber — H₂ Generator & Waveguide Node",desc:'E-W center. 5 Fibonacci corbels. Door 1: copper handles 65 m. Door 2: hieratic marks (unopened 2024). HCl+H₂SO₄→CaSO₄+H₂. Hydrogen=conductive gas for discharge tubes. 5 Dendera reliefs=1 device. Natron=industrial. Copper doors=EM secondary focus. Cu+limestone+EM=waveguide.\n\nDixon: hook+cedar 3341 BCE=tools. Zero sarcophagus.',
+stats:[['Position','Exact E-W center'],['Door 1','Copper, 65 m (1993)'],['Door 2','Hieratic marks (2024)'],['Chemistry','→ H₂ gas (conductive)'],['5 Dendera','5 identical reliefs'],['Copper','At EM focus nodes'],['Waveguide','Cu+limestone+EM'],['Dixon','Tools, cedar 3341 BCE'],['Natron','Industrial patterns'],['Sarcophagus','Never found'],['H₂','For gas discharge tubes'],['Function','Chemical-electrical node']],
+src:'Gantenbrink (1993). Djedi (2011). Davidovits. Balezin (2018).'},
+
+gallery:{tag:'Grand Gallery',color:'#d4a855',title:'Grand Gallery — Horn, Hydraulics & Levitation',desc:'46.7 m, 26°31\'. 7 corbels→parabolic. >6 sec reverb. 27 slots=acoustic grating. Sub(5 Hz)→KC(121 Hz). If Cadman: water→5 Hz→121 Hz→piezo.\n\nTibetan: 5 Hz+harmonics→levitation (Kjellson). Well Shaft: pressure vent, already bypassed when Al-Ma\'mun entered (820). By whom? No record. Abydos reliefs (500 km). Saqqara Bird (20 km).',
+stats:[['Length','46.7 m at 26°31\''],['Corbels','7→parabolic horn'],['27 Slots','Acoustic grating'],['If Hydraulic','Water→5 Hz→121 Hz→piezo'],['Tibetan','5 Hz→levitation'],['Well Shaft','Pre-accessed (by whom?)'],['Abydos','Helicopter forms (500 km)'],['Saqqara Bird','Generates lift (20 km)'],['Reverb','> 6 seconds'],['Connects','Sub→KC'],['Function','Amplifier+possibly antigravity'],['Largest','Precision interior, ancient world']],
+src:'Petrie (1883). Kjellson. Cadman. Beranek (1962).',deep:[["Advanced CPU Architecture", "Computer Networks Deep Computer networking enables communication between devices through layered protocols. The OSI model (7 layers) and TCP/IP model (4 layers) organize network functions: Physical (bits on wire — Ethernet 1000BASE-T uses 4 twisted pairs at 125 MHz, fiber optic at 400 Gbps), Data Link (frames — MAC addresses 48-bit, Ethernet frame 64-1518 bytes, switches, ARP), Network (packets — "], ["Web Architecture", "Web Architecture Client-Server model: browser (client) sends HTTP requests to server, which returns HTML/CSS/JS/data. HTTP methods: GET (read), POST (create), PUT (update), DELETE (remove). Status codes: 200 OK, 301 Moved, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 500 Server Error. HTTPS: HTTP + TLS encryption (RSA/ECDH key exchange + AES symmetric encryption). Architecture "], ["LLM Architecture & Scaling", "LLM Architecture & Scaling Large Language Models (LLMs) are transformer-based neural networks trained on massive text corpora to predict the next token. Architecture : input tokens → embedding (d=4096-12288) + positional encoding (RoPE: rotary position embedding) → L decoder layers (each: masked multi-head self-attention + FFN + RMSNorm + residual connections) → linear projection → softmax → next "], ["Transformer Architecture", "Large Language Models — GPT, Claude, LLaMA Massive neural networks trained on internet-scale text to predict next tokens. Emergent capabilities: reasoning, code generation, multilingual translation, instruction following. Trillion-parameter models now standard. Pretraining: Autoregressive: P(x_t | x_{ Tokenization: Byte-pair encoding (BPE) or SentencePiece. Vocabulary 32K-200K tokens. Subword unit"], ["TCP/IP z/OS — stack architecture", "TCP/IP stack z/OS TCP/IP z/OS é stack nativa do sistema operacional — started task TCPIP em address space próprio, configurada via PROFILE.TCPIP em PARMLIB ou hlq.TCPPARMS. Componentes: IP CS (IP Communications Server) implementa stack TCP/IPv4/IPv6 + tooling (FTPD, TN3270D server, HTTPD, NFS, sendmail, DNS BIND). Configuração via OBEY files (VARY TCPIP,,OBEY,DSN(...)) — modificação dinâmica sem r"]]},
+
+sub:{tag:'Subterranean',color:'#7a6a50',title:'Subterranean — The Machine Still Runs',desc:'30 m bedrock. 105 m <6 mm. STRONGEST EM. Below apex 2 cm. Water table.\n\nCadman WORKING model. Water→hammer→5 Hz→streaming+piezo. Rough floor=max contact. Flat ceiling=reflection. Grotto=pre-construction survey. Well Shaft=pressure vent.\n\nWater marks inside=flood lines. Nun=primordial ocean=aquifer. Osiris Level 4: deeper. Collins caves→network. Emerald Tablets: "channels of water beneath."\n\nTHE MACHINE STILL RUNS: The aquifer still flows. Quartz still under pressure. Chambers still resonate. EM still concentrates. Ions still measured. The machine was never turned off. It\'s degraded — no capstone, no casing, shafts blocked, passages open — like a computer without keyboard and monitor. But the processor still runs.\n\nThe active water well at the base is rarely mentioned. Water+quartz+pressure=voltage. The "motor" never stopped.\n\nIF RESTORED: capstone (electrum) replaced, casing (Tura limestone) restored, shafts unblocked, chambers resealed, passage reconnected to aquifer — the theory predicts the pyramid would function again. Nobody has tested this because nobody officially recognizes it\'s a machine.',
+stats:[['EM','STRONGEST focus point'],['Cadman','WORKING model'],['Still Running','Aquifer+quartz+pressure=active'],['Water Well','Active at base (rarely mentioned)'],['Motor','Never stopped'],['If Restored','Theory: would function again'],['Nobody Tests','Not recognized as machine'],['Water Marks','Flood lines=submersion'],['Nun','= aquifer (text=geology)'],['Osiris','Level 4: deeper passages'],['Collins','Network beneath plateau'],['Emerald Tablets','Match discoveries'],['Hawara Labyrinth','3,000 rooms underground (80 km, never excavated)'],['Osireion (Abydos)','Island-in-water twin of Osiris Shaft (500 km)'],['Saqqara Tunnels','5.7 km under Djoser; blue faience at 28 m'],['Obelisk','1,168t unfinished, impossible curves'],['EZ Water','Aquifer+granite=4th phase water=voltage (Pollack)'],['Shabaka Stone','Creation by vibration=cymatics principle'],['EZ Water','Pollack 4th phase: granite+water = voltage source'],['Water = Energy','Aquifer through quartz bedrock = geological battery']],
+src:'Balezin (2018). Cadman. Collins (2009). Doreal (1939). Hawass (1999).'},
+
+entrance:{tag:'Entrance',color:'#d4a855',title:'The Pivot Door — Pre-Accessed & Never a Tomb',desc:'20t pivot, 1 hand, invisible. REVERSIBLE. Al-Ma\'mun: pre-accessed via Well Shaft. By whom? Sarcophagus empty. Capstone missing before history. If tomb: where\'s the mummy?\n\nVyse controversy: the ONLY texts attributing pyramid to Khufu are quarry marks found by Vyse (1837) — his assistant\'s diary mentions red paint used at night, pigment analysis shows inconsistencies, hieroglyphic errors no scribe would make. If questioned, attribution to Khufu relies primarily on these marks. C-14 mortar: 300-400 yr older than Khufu (Bonani 1995). Range 2853-3809 BCE. Satellite pyramids may be later additions. Sealed air: different isotopic ratios=genuinely ancient.',
+stats:[['Door','20t pivot, <1 mm'],['REVERSIBLE','Not permanent'],['Pre-accessed','Before Al-Ma\'mun (by whom?)'],['Sarcophagus','Empty'],['Capstone','Missing before history'],['C-14 Mortar','300-400 yr older than Khufu'],['Range','2853-3809 BCE'],['Sealed Air','Different isotopes=ancient'],['Satellites','May be later additions'],['If Tomb','No mummy, reversible door, empty box'],['1 Angle','4 applications'],['European','Renaissance, 4,000 yr later']],
+src:'Petrie (1883). Bonani (1995). Strabo XVII.',deep:[["Masonry Structures", "Mass Timber Construction (CLT, Glulam) Mass timber refers to large solid engineered wood products replacing concrete/steel structural elements: cross-laminated timber (CLT) , glued-laminated timber (glulam) , laminated veneer lumber (LVL) , nail-laminated timber (NLT) , dowel-laminated timber (DLT) . CLT , invented in Austria/Germany ~1990s, layers 20-40 mm boards in alternating perpendicular orie"], ["Mantle plumes — Hawaii Iceland Yellowstone", "Mantle plumes — origem hotspots Mantle plumes são feixes ascendentes de material quente do deep mantle (originando-se possivelmente na boundary core-mantle ~2900 km depth) emergindo no surface como hotspots de vulcanismo intraplate — não associados a margens de placas. W. Jason Morgan (Princeton, 1971 Nature) propôs original mantle plume hypothesis para explicar trilhas vulcânicas lineares como Ha"], ["Supervolcanoes — Yellowstone Toba", "Supervolcanoes — VEI 8 caldera systems Supervolcano — eruption producing &gt;1000 km³ of ejecta (VEI 8 — Volcanic Explosivity Index) — ~5-10 known in last million years globally. Mechanism: large shallow magma chamber beneath continental crust accumulates over hundreds of thousands of years → roof collapses → caldera (30-50 km depression); pyroclastic flows + ash distributed hundreds-thousands of "]]},
+
+void_:{tag:'Big Void',color:'#4466aa',title:'Big Void — Missing Machine Components',desc:'3 muon techniques, >5σ. ≥30 m. 2023: sloped? Underground=input. Void=output? Half a machine.\n\nPyramid Effect patented (Drbal, Prague 91304, 1959): razor blades stay sharp. Russian 44 m pyramids: immune boost, yield +30-100%, water changed. Shape itself has measurable effects — even without the original engineering.',
+stats:[['Confidence','>5σ'],['Length','≥ 30 m'],['If Machine','Missing components'],['Patent 91304','Pyramid sharpens razors (1959)'],['Russian','44 m: immune+yield+water'],['Shape Effect','Measurable without engineering'],['Underground','Input side (partially mapped)'],['Void','Output side? (unmapped)'],['2023','9 m→wall'],['Access','Forbidden'],['Last Find','820 CE'],['Future','Tech not yet invented']],
+src:'Morishima (2017). Procureur (2023). Drbal (1959). Golod—Russian pyramids.',deep:[["Muon g-2 — resultado final 2023", "Massa do W boson — tensão CDF vs LHC A massa do W boson m_W é parâmetro precision crítico do Standard Model — relacionada a outros parâmetros via radiative corrections envolvendo top quark, Higgs, e potenciais BSM particles. Predição SM (combinando precision G_F, α, m_Z, m_top, m_Higgs medidos): m_W(SM) ≈ 80.354 ± 0.007 GeV . Medidas experimentais históricas: LEP2 era 80.376 ± 0.033 GeV; Tevatron "], ["Neuroimaging Techniques", "Computational Neuroscience Computational neuroscience uses mathematical models and simulations to understand brain function. Hodgkin-Huxley model (Nobel 1963) : first quantitative model of action potential — 4 coupled ODEs describing Na⁺/K⁺ channel dynamics: C_m(dV/dt) = −g_Na·m³h(V−E_Na) − g_K·n⁴(V−E_K) − g_L(V−E_L) + I_ext. Parameters measured from squid giant axon (~0.5 mm diameter). Predicts c"], ["Calcium Imaging", "The Action Potential The action potential is the all-or-none electrical spike that neurons use to transmit information. Hodgkin and Huxley (1952) , recording from the squid giant axon, built the quantitative model that earned the 1963 Nobel Prize &mdash; arguably the most successful model in all of biology. At rest the membrane sits near &minus;70 mV, maintained by the Na&plus;/K&plus; pump and se"], ["Resting-State Imaging", "The Action Potential The action potential is the all-or-none electrical spike that neurons use to transmit information. Hodgkin and Huxley (1952) , recording from the squid giant axon, built the quantitative model that earned the 1963 Nobel Prize &mdash; arguably the most successful model in all of biology. At rest the membrane sits near &minus;70 mV, maintained by the Na&plus;/K&plus; pump and se"]]},
+
+sphinx:{tag:'Great Sphinx',color:'#c09858',title:'The Sphinx — Guardian of Everything Below',desc:'73×20 m. Head 1:22→re-carved. Schoch: ~9700 BCE. Manichev: wave-cut.\n\nCHAMBER: 9×12 m, CONFIRMED (Dobecki 1991). Sealed. Never opened. Cayce (1932): predicted exact spot. Cayce medical readings: ~85% verified. Schoch denied further permits after publishing. Gantenbrink denied further access. No permits since 1990s.\n\nNETWORK: Sphinx chamber+Osiris Shaft (30 m, sarcophagus on water-island, Level 4 deeper)+Collins caves+Sub Chamber=ONE system.\n\nEmerald Tablets: "I placed guardians... beneath the great image... sealed chambers... channels of water... knowledge to survive destruction." Written before Collins, Dobecki, or Cadman.\n\nSecond Sphinx: Pliny+georadar (2022).\n\nHeródoto (450 BCE): described underground chambers with columns, water channels, and an island — 2,400 years before Hawass found the Osiris Shaft matching his description exactly.\n\nPapiro Westcar: Khufu SEARCHED for "secret chambers of the sanctuary of Thoth" to COPY in his pyramid. He didn\'t invent — he replicated something older.\n\nThe Sphinx sits ON the network. It IS the guardian. What it guards: the interface between the surface structure and the underground system that powers it.',
+stats:[['Chamber','9×12 m CONFIRMED (sealed)'],['Cayce','Predicted exact spot (1932)'],['Heródoto','Described Osiris Shaft 2,400 yr early'],['Westcar','Khufu searched for Thoth\'s chambers'],['Network','Sphinx+Osiris+Collins+Sub'],['Emerald Tablets','Match all discoveries'],['Second Sphinx','Pliny+georadar (2022)'],['Schoch','denied further permits after rain dating'],['Gantenbrink','denied further permits after shaft door'],['Access restricted','No permits since 1990s'],['Erosion','~9700 BCE'],['Guardian','Of the underground system'],['Book of Dead','"Guardians at portals"=Sphinx at entrance'],['Benben','Meteoritic capstone=antenna of the system']],
+src:'Schoch (1992). Dobecki (1992). Cayce 5748-6. Herodotus II.124. Papyrus Westcar. Collins (2009). Doreal (1939).',deep:[["Wind Drivetrain", "NMC (Nickel Manganese Cobalt) Battery NMC is a lithium-ion cathode chemistry (LiNi&#8339;Mn&#8342;Co&#8347;O&#8322;) that blends three metals to balance their strengths: nickel for high energy density, cobalt for stability and rate, and manganese for safety and cost. It is the dominant chemistry for long-range electric vehicles and high-energy applications. The trade space : increasing the nickel "], ["AI Training 2026", "Operating Systems An operating system (OS) is the software layer between hardware and applications. It exists to solve one core problem: many programs must share finite, dangerous-to-touch-directly hardware (CPU, memory, disk, devices) safely, fairly, and efficiently . It does this through two big ideas &mdash; abstraction (turn raw hardware into clean APIs) and protection (isolate programs from e"], ["Gut-Brain Axis", "Toxicology Toxicology — the science of poisons — studies how chemical, physical, and biological agents cause adverse effects in living organisms. Paracelsus (1538) : \"The dose makes the poison\" ( dosis sola facit venenum ) — the foundational principle. Even water is toxic at ~6 liters (hyponatremia: dilutional sodium drop → cerebral edema → death). LD₅₀ (median lethal dose): dose killing 50% of te"], ["Brain Regions & Functions", "Action Potential The action potential (AP) is an all-or-nothing electrical signal propagating along neurons at 1-120 m/s . At rest, the membrane potential is −70 mV (inside negative) maintained by the Na⁺/K⁺-ATPase (3 Na⁺ out, 2 K⁺ in per ATP) and K⁺ leak channels. The Nernst equation E = (RT/zF)·ln([ion]_out/[ion]_in) gives equilibrium potentials: E_K ≈ −90 mV, E_Na ≈ +60 mV. The Goldman equation"], ["Blood-Brain Barrier", "Optogenetics Optogenetics (Deisseroth, 2005) uses genetically encoded light-sensitive proteins (opsins) to control specific neurons with millisecond precision. Insert the gene for Channelrhodopsin-2 (ChR2) from green algae into target neurons → blue light (473 nm) activates those exact neurons. Halorhodopsin (NpHR): yellow light (589 nm) silences neurons. This gives neuroscientists an ON/OFF switc"]]},
+
+valley:{tag:'Valley Temple',color:'#8a7a60',title:'Valley Temple — Two Ages & The Mica Connection',desc:'200t blocks, same erosion=same age. Granite ON eroded limestone. 16 pillars, zero inscriptions. <0.1 mm flatness.\n\nTeotihuacán connection: MICA between stone layers=dielectric insulation. Same principle: conductor+insulator+aquifer. Two pyramid sites 12,000 km apart using the same engineering: place electrical insulators between conductive stone layers above an aquifer.\n\nBaalbek: 1,820t, 2-age pattern. Coral Castle: "pyramid secrets." Dendera Zodiac: 25,920 yr. Lost: nanotubes, concrete, nanoparticles, Greek Fire.\n\nShabaka Stone (Memphis theology): creation through vibration/sound=cymatics. The civilization that built the Valley Temple described the physics of acoustic manipulation of matter. They practiced what they preached.',
+stats:[['Core','200t (same erosion as Sphinx)'],['Two Ages','Granite over eroded limestone'],['Zero Inscriptions','Unique in all Egypt'],['Teotihuacán','MICA insulator (same principle!)'],['Same Design','Conductor+insulator+aquifer'],['Baalbek','1,820t, 2-age pattern'],['Shabaka Stone','Creation by vibration=cymatics'],['Dendera Zodiac','25,920 yr observation'],['Coral Castle','"Pyramid secrets"'],['Lost Tech','Nanotubes, concrete, nanoparticles'],['Pattern','Oldest=most precise'],['Flatness','<0.1 mm']],
+src:'Lehner (1997). Schoch (2012). Barazzetti (2019). Heyerdahl. Cauville (1997). Shabaka Stone.'},
+
+energy:{tag:'Energy',color:'#ff8844',title:'The Machine — 8 Systems, Still Running, Restoration',desc:'8 systems: piezo+electrokinetic+EM+acoustic+ionic+musical+hydraulic+chemical.\n\nTesla 3-6-9. Wardenclyffe=pyramid. Emerald Tablets: "vibration of ether"+"anti-gravity." Tibetan: 5 Hz→levitation. Bosnia: 28 kHz beam.\n\nBaghdad=battery. 5 Dendera=load. Pyramid=generator. Iron:Au=galvanic. No soot=electric light. Djed=insulator. Eye of Horus=pineal. CIA: 4 Hz→OBE.\n\nTeotihuacán: mica insulator=same principle. Ley grid: EM intersections=sacred sites. Schumann accelerating.\n\nSaqqara: impeller+glider. Antikythera: computer. One civilization: turbine+aircraft+computer+power plant.\n\nφ: quantum+black holes+Planck. 6 constants. Cubit=π/6. c 9 digits. Mass=Earth. 1:43,200.\n\nTHE MACHINE STILL RUNS. Aquifer flows. Quartz compressed. EM concentrates. The motor never stopped.\n\nIF RESTORED: electrum capstone, Tura casing, sealed shafts, reconnected aquifer→theory predicts full function. Nobody tests because nobody admits it\'s a machine.\n\nSubmerged sites: Yonaguni, Gunung Padang (20,000+!), Dwarka. Richat=Atlantis? C-14 mortar: 300-400 yr older. Turin: 36,620 yr. All cluster at Ice Age end.\n\nP→0. "Coincidence" is the extraordinary claim. The machine hypothesis is one alternative interpretation.',
+stats:[['8 Systems','All measurable, all published'],['Still Running','Aquifer+quartz+pressure=active'],['If Restored','Theory: full function'],['Nobody Tests','Not recognized as machine'],['CIA','4 Hz→OBE (declassified)'],['Eye of Horus','= pineal gland'],['Teotihuacán','Same principle (mica!)'],['Ley Grid','EM intersections=sacred sites'],['Gunung Padang','20,000+ BCE'],['Richat','= Atlantis (Plato match)'],['6 Constants+cubit=π/6','System IS π'],['P→0','"Coincidence"=extraordinary claim'],['Zero-Point','Casimir proven; cavity extracts vacuum'],['Holographic','Concave faces = holographic surface (Bekenstein)'],['Torsion Fields','Pyramid generates torsion (Kozyrev)'],['EZ Water','4th phase: aquifer+granite=voltage (Pollack 2013)'],['Ankh+Was+Djed','Antenna+fork+insulator=system components'],['Consciousness','4Hz+ions+EM+432Hz+DMT=transformation machine'],['STILL RUNS','Aquifer+quartz+pressure=motor never stopped'],['Book of Dead','Frequency navigation manual for chambers'],['Pyramids Everywhere','China 100+, Antarctica, Amazon, Mars, underwater'],['EZ Water','4th phase (Pollack): aquifer+granite = voltage'],['Pyramids Worldwide','China 100+, Japan, Antarctica, Amazon, Cydonia'],['19.5°','Tetrahedron in sphere = max energy emergence'],['Ankh+Was+Djed','Antenna+fork+insulator = gods\' toolkit'],['Book of Dead','Technical manual, not funeral text'],['STILL RUNS','Aquifer+quartz+pressure = never turned off'],['Final Answer','Consciousness transformation machine']],
+eq:'8 systems · Tesla 3-6-9 · still running\nCubit=π/6 · c in 9 digits · mass=Earth\nCIA: 4 Hz→OBE · Eye of Horus=pineal\nP→0 · machine hypothesis=parsimony',
+src:'Dunn (1998). Balezin (2018). Tesla US 1,119,732. CIA-RDP96-00788. Cadman. Doreal (1939). Livio (2002). Strassman (2001).',deep:[["Wireless Power Transfer", "Supercapacitors (Ultracapacitors) Supercapacitors (also ultracapacitors , EDLC — Electric Double-Layer Capacitors ) store energy electrostatically/electrochemically at nanoscale carbon-electrolyte interface, achieving 100-10,000× the energy density of conventional capacitors and 10-100× the power density of batteries. Helmholtz double layer (1853 theory) at electrode-electrolyte interface accumula"], ["Wardenclyffe Tower", "Tesla Turbine The Tesla turbine ( US Patent 1,061,206, 1913 ) uses smooth parallel disks instead of blades — fluid spirals inward through gaps, transferring momentum via viscous drag τ = μ·(dv/dr) . Disk spacing δ ≈ boundary layer thickness (~0.5-1 mm). Advantages : no blades to erode (handles abrasive/two-phase fluids), simple construction, bidirectional (works as pump in reverse). Applications :"], ["X-ray Crystallography & Synchrotrons", "Plasma Waves & Instabilities Plasma waves are collective oscillations in ionized gas — the fourth state of matter comprising ~99% of visible matter in the universe. Langmuir waves (electron plasma oscillations): electrons displaced from equilibrium oscillate at plasma frequency ω_pe = √(n_e·e²/(ε₀·m_e)) — for ionosphere n_e~10¹² m⁻³: f_pe~9 MHz (why radio below ~10 MHz reflects off ionosphere → AM"], ["Crystallography", "Battery Technology Batteries convert chemical energy to electrical energy via electrochemical reactions. Lithium-ion (Li-ion) (Goodenough, Whittingham, Yoshino — Nobel Chemistry 2019): dominant rechargeable technology. Cathode: LiCoO₂ (LCO, 150 Wh/kg — phones), LiFePO₄ (LFP, 170 Wh/kg — safe, long-life: ~3000 cycles, used by Tesla/BYD), NMC (Li[NiMnCo]O₂, 200-250 Wh/kg — EVs), NCA (250 Wh/kg — Tes"], ["Casimir Effect & Vacuum Energy", "Casimir Effect & Vacuum Energy The Casimir effect , predicted by Hendrik Casimir (1948) and first measured by Lamoreaux (1997) , is a macroscopic force arising from quantum vacuum fluctuations. Two uncharged parallel conducting plates placed close together experience an attractive force F/A = −π²ℏc/(240d⁴) . At d = 10 nm, this pressure is about 1 atmosphere. The physical origin: quantum electrodyn"]]}
+};
+
+// ═══ TEXTURES ═══
+function nTex(){return null}
+function sTex(){return null}
+function hTex(){return null}
+
+// ═══ ORBIT CTRL ═══
+class OC{constructor(c,e){this.c=c;this.e=e;this.t=new THREE.Vector3(0,35,0);this.s=new THREE.Spherical();this.sd=new THREE.Spherical();this.sc=1;this.p=new THREE.Vector3();this.dmp=.06;this.minD=60;this.maxD=700;this.minP=.05;this.maxP=Math.PI/2-.05;this.ar=true;this.ars=.15;this._d=false;this._x=0;this._y=0;this._b=0;this._td=0;this._en=true;this.s.setFromVector3(new THREE.Vector3().copy(c.position).sub(this.t));e.addEventListener('pointerdown',v=>{if(!this._en)return;this._d=true;this._x=v.clientX;this._y=v.clientY;this._b=v.button});e.addEventListener('pointermove',v=>{if(!this._en||!this._d)return;const dx=v.clientX-this._x,dy=v.clientY-this._y;this._x=v.clientX;this._y=v.clientY;if(this._b===0){this.sd.theta-=dx*.005;this.sd.phi-=dy*.005}else if(this._b===2){const r=new THREE.Vector3().setFromMatrixColumn(this.c.matrix,0);const u=new THREE.Vector3().setFromMatrixColumn(this.c.matrix,1);this.p.addScaledVector(r,-dx*.4);this.p.addScaledVector(u,dy*.4)}});e.addEventListener('pointerup',()=>this._d=false);e.addEventListener('wheel',v=>{if(!this._en)return;v.preventDefault();this.sc*=v.deltaY>0?1.06:.94},{passive:false});e.addEventListener('contextmenu',v=>v.preventDefault());let tc=[];e.addEventListener('touchstart',v=>{if(!this._en)return;v.preventDefault();tc=[...v.touches];if(tc.length===2)this._td=Math.hypot(tc[0].clientX-tc[1].clientX,tc[0].clientY-tc[1].clientY)},{passive:false});e.addEventListener('touchmove',v=>{if(!this._en)return;v.preventDefault();const t=[...v.touches];if(t.length===1&&tc.length>=1){this.sd.theta-=(t[0].clientX-tc[0].clientX)*.005;this.sd.phi-=(t[0].clientY-tc[0].clientY)*.005}else if(t.length===2){const d=Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);if(this._td>0)this.sc*=this._td/d;this._td=d}tc=t},{passive:false});e.addEventListener('touchend',v=>{tc=[...v.touches];if(tc.length<2)this._td=0})}update(){if(this.ar)this.sd.theta-=this.ars*.001;this.s.theta+=this.sd.theta;this.s.phi+=this.sd.phi;this.s.phi=Math.max(this.minP,Math.min(this.maxP,this.s.phi));this.s.radius*=this.sc;this.s.radius=Math.max(this.minD,Math.min(this.maxD,this.s.radius));this.t.add(this.p);const o=new THREE.Vector3().setFromSpherical(this.s);this.c.position.copy(this.t).add(o);this.c.lookAt(this.t);this.sd.theta*=(1-this.dmp);this.sd.phi*=(1-this.dmp);this.sc=1;this.p.set(0,0,0)}}
+
+// ═══ AUDIO ═══
+function initAudio(){audioCtx=new(window.AudioContext||window.webkitAudioContext)();const bs=2*audioCtx.sampleRate,bf=audioCtx.createBuffer(1,bs,audioCtx.sampleRate),d=bf.getChannelData(0);for(let i=0;i<bs;i++)d[i]=(Math.random()*2-1)*.12;const wn=audioCtx.createBufferSource();wn.buffer=bf;wn.loop=true;const wf=audioCtx.createBiquadFilter();wf.type='lowpass';wf.frequency.value=350;windG=audioCtx.createGain();windG.gain.value=0;wn.connect(wf);wf.connect(windG);windG.connect(audioCtx.destination);wn.start()}
+function toggleAudio(){if(!audioCtx)initAudio();audioOn=!audioOn;document.getElementById('ab').classList.toggle('on',audioOn);if(audioOn){audioCtx.resume();windG.gain.setTargetAtTime(.1,audioCtx.currentTime,.3)}else windG.gain.setTargetAtTime(0,audioCtx.currentTime,.3)}
+function playStep(){if(!audioOn||!audioCtx||!fps)return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=70+Math.random()*30;o.type='sine';g.gain.setValueAtTime(.04,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.12);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+.12)}
+
+// ═══ PAYWALL ═══
+function showPro(feature){
+  if(isPro)return false;
+  document.getElementById('pro-modal').classList.add('show');
+  return true;
+}
+function closePro(){document.getElementById('pro-modal').classList.remove('show')}
+function purchasePro(){
+  // Capacitor IAP: replace with real purchase flow
+  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.InAppPurchase){
+    // Native IAP flow
+    window.Capacitor.Plugins.InAppPurchase.purchase({productId:'com.gizascan.app.pro'}).then(()=>{
+      isPro=true;unlockAll();closePro()
+    }).catch(e=>console.log('Purchase cancelled',e));
+  }else{
+    // Web fallback (for testing) — just unlock
+    isPro=true;unlockAll();closePro();
+  }
+}
+function restorePro(){
+  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.InAppPurchase){
+    window.Capacitor.Plugins.InAppPurchase.restorePurchases().then(p=>{
+      if(p&&p.some(i=>i.productId==='com.gizascan.app.pro')){isPro=true;unlockAll()}
+    }).catch(()=>{});
+  }
+}
+function unlockAll(){
+  isPro=true;
+  document.querySelectorAll('.cb.locked').forEach(b=>b.classList.remove('locked'));
+  document.querySelectorAll('.blur-pro').forEach(el=>el.classList.remove('blur-pro'));
+  document.querySelectorAll('.unlock-banner').forEach(el=>el.remove());
+}
+function checkPro(feature){
+  if(isPro)return true;
+  if(PRO_FEATURES.includes(feature)){showPro(feature);return false}
+  return true;
+}
+
+// ═══ INIT ═══
+function init(){
+  if(typeof THREE==='undefined'){document.getElementById('lpct').textContent='Error: 3D engine failed to load. Please open this file directly in Chrome/Safari.';document.getElementById('lbar').style.background='#ff4422';return}
+  clk=new THREE.Clock();
+  _tmpV=new THREE.Vector3();_tmpE=new THREE.Euler(0,0,0,'YXZ');_fwd=new THREE.Vector3();_rgt=new THREE.Vector3();_dir=new THREE.Vector3();_hsV=new THREE.Vector3();
+  scene=new THREE.Scene();
+  cam=new THREE.PerspectiveCamera(55,(innerWidth||screen.width||320)/(innerHeight||screen.height||480),.5,2000);cam.position.set(220,100,240);
+  ren=new THREE.WebGLRenderer({antialias:false});
+  ren.setSize(innerWidth,innerHeight);ren.setPixelRatio(1);
+  
+  document.getElementById('app').appendChild(ren.domElement);
+  oc=new OC(cam,ren.domElement);
+  ambL=new THREE.AmbientLight(0xffeedd,.45);scene.add(ambL);
+  scene.add(new THREE.HemisphereLight(0xfff8ee,0x806040,.3));
+  sunL=new THREE.DirectionalLight(0xfff0dd,2.0);sunL.position.set(120,160,80);
+  
+  scene.add(sunL);scene.add(new THREE.DirectionalLight(0x8899bb,.3).translateX(-80).translateY(60).translateZ(-60));
+
+  const _builders=[
+    ['Sky',buildSky],['Ground',buildGround],['Pyramid',buildPyramid],
+    ['Interior',buildInterior],['Surroundings',buildSurroundings],
+    ['Dust',buildDust],['Humans',buildHumans],['EMField',buildEMField],
+    ['Acoustics',buildAcousticWaves],['Thermal',buildThermalMap],
+    ['Stars',buildStarLines],['GeoLayers',buildGeoLayers],
+    ['Math',buildMathOverlays],['Sand',buildSand],['GodRays',buildGodRays],
+    ['Casing',buildCasing],['Muons',buildMuons],['Energy',buildEnergyField],
+    ['Hotspots',setupHS],['Joystick',setupJoystick]
+  ];
+  const _errors=[];
+  _builders.forEach(([name,fn])=>{try{fn()}catch(e){_errors.push(name+': '+e.message);console.error('Builder '+name+' failed:',e)}});
+  if(_errors.length>0)console.warn('FAILED BUILDERS:',_errors);
+
+
+  mmCtx=document.getElementById('mmc').getContext('2d');
+  // Cache DOM refs used in animate loop
+  _dgf=document.getElementById('dgf');_dgv=document.getElementById('dgv');_muonInfo=document.getElementById('muon-info');_ldMuon=document.getElementById('ld-muon');_wvEl=document.getElementById('waveform');_cnEl=document.getElementById('cn');_ldEm=document.getElementById('ld-em');_ldAc=document.getElementById('ld-ac');_ldTh=document.getElementById('ld-th');_wvCv=document.getElementById('waveform');
+  window.addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();ren.setSize(innerWidth,innerHeight)});
+  ren.domElement.addEventListener('click',onClk);
+  document.getElementById('ts').addEventListener('input',onTime);
+  document.addEventListener('keydown',e=>{if(e.code==='KeyT'&&fps){e.preventDefault();tpOpen=!tpOpen;document.getElementById('tp').classList.toggle('show',tpOpen);if(tpOpen)document.exitPointerLock?.();return}if(e.code==='Escape'){if(tpOpen){tpOpen=false;document.getElementById('tp').classList.remove('show');return}if(fps){SM('orbit');return}}if(!fps)return;if(e.code==='KeyW')mv.f=1;if(e.code==='KeyS')mv.b=1;if(e.code==='KeyA')mv.l=1;if(e.code==='KeyD')mv.r=1});
+  document.addEventListener('keyup',e=>{if(e.code==='KeyW')mv.f=0;if(e.code==='KeyS')mv.b=0;if(e.code==='KeyA')mv.l=0;if(e.code==='KeyD')mv.r=0});
+  window.addEventListener('blur',()=>{mv.f=0;mv.b=0;mv.l=0;mv.r=0});
+  showInfo('overview',false);
+  // Mark PRO buttons with lock
+  PRO_FEATURES.forEach(f=>{
+    const sel=f==='fps'?"SM('fps')":f==='night'?'toggleNight()':f==='construct'?'toggleConstruct()':f==='scale'?'toggleScale()':f==='casing'?'toggleCasing()':f==='teleport'?null:`toggleOverlay('${f}')`;
+    if(sel){const btn=document.querySelector('[onclick="'+sel+'"]');if(btn&&!isPro)btn.classList.add('locked')}
+  });
+  restorePro();
+  applyI18n();
+  setLang(LANG);
+  if(_errors.length>0){const eDiv=document.createElement('div');eDiv.style.cssText='position:fixed;top:50px;left:10px;background:rgba(255,0,0,.8);color:#fff;padding:8px;border-radius:6px;font:11px monospace;z-index:9999;max-width:90vw';eDiv.textContent='Builders failed: '+_errors.join(', ');document.body.appendChild(eDiv)}
+  // Force initial render state
+  setTimeout(()=>{ren.render(scene,cam)},100);
+  loading()
+}
+
+function loading(){const b=document.getElementById('lbar'),p=document.getElementById('lpct');let v=0;
+const iv=setInterval(()=>{v+=Math.random()*18+6;if(v>100)v=100;b.style.width=v+'%';p.textContent=Math.floor(v)+'%';if(v>=100){clearInterval(iv);setTimeout(()=>{document.getElementById('loader').classList.add('done');
+        cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();ren.setSize(innerWidth,innerHeight);
+        ren.render(scene,cam);animate()},500)}},180)}
+
+// ═══ BUILDERS ═══
+function buildSky(){
+  const c=document.createElement('canvas');c.width=512;c.height=256;const x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,0,256);
+  g.addColorStop(0,'#04041a');g.addColorStop(.3,'#141440');g.addColorStop(.5,'#6a4a3a');g.addColorStop(.7,'#d0a878');g.addColorStop(1,'#b89058');
+  x.fillStyle=g;x.fillRect(0,0,512,256);
+  for(let i=0;i<200;i++){x.beginPath();x.arc(Math.random()*512,Math.random()*100,Math.random()+.3,0,Math.PI*2);x.fillStyle='rgba(255,255,220,'+(Math.random()*.5+.3)+')';x.fill()}
+  scene.add(skyMesh=new THREE.Mesh(new THREE.SphereGeometry(900,16,16),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),side:THREE.BackSide})))
+}
+
+function buildGround(){const geo=new THREE.PlaneGeometry(1800,1800,80,80);const pos=geo.attributes.position;for(let i=0;i<pos.count;i++){const px=pos.getX(i),py=pos.getY(i),d=Math.hypot(px,py);let h=Math.sin(px*.008)*3+Math.cos(py*.012)*2.5;if(d<HF+25)h*=Math.max(0,(d-HF)/25);pos.setZ(i,h)}geo.computeVertexNormals();const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:0xc09858,side:THREE.DoubleSide}));m.rotation.x=-Math.PI/2;m.receiveShadow=false;scene.add(m)}
+
+function buildPyramid(){
+  // Use built-in ConeGeometry for maximum device compatibility
+  const la=25,lh=H/la;
+  for(let i=0;i<la;i++){
+    const t1=i/la,t2=(i+1)/la;
+    const r1=HF*(1-t1),r2=HF*(1-t2);
+    const y1=i*lh,h=lh;
+    const geo=new THREE.CylinderGeometry(r2,r1,h,4,1);
+    geo.rotateY(Math.PI/4);
+    const sh=1-i*.012;
+    const mat=new THREE.MeshBasicMaterial({color:new THREE.Color(.8*sh,.68*sh,.44*sh),side:THREE.DoubleSide});
+    const mesh=new THREE.Mesh(geo,mat);
+    mesh.position.y=y1+h/2;
+    mesh.castShadow=false;mesh.receiveShadow=false;
+    shells.push({mesh,mat});scene.add(mesh)
+  }
+  // Capstone
+  const cap=new THREE.Mesh(
+    new THREE.ConeGeometry(HF*.05,H*.04,4),
+    new THREE.MeshBasicMaterial({color:0xd4a855})
+  );
+  cap.position.y=H+1;cap.rotation.y=Math.PI/4;
+  shells.push({mesh:cap,mat:cap.material});scene.add(cap)
+}
+
+function buildInterior(){intG=new THREE.Group();intG.visible=true;const lm=new THREE.MeshBasicMaterial({color:0xffdd88,side:THREE.DoubleSide,depthTest:false,depthWrite:false});const gm=new THREE.MeshBasicMaterial({color:0xff4466,side:THREE.DoubleSide,depthTest:false,depthWrite:false});const pm=new THREE.MeshBasicMaterial({color:0xd4b888,side:THREE.DoubleSide,depthTest:false});const glow=new THREE.MeshBasicMaterial({color:0xffcc44,side:THREE.DoubleSide,depthTest:false});
+function bx(w,h,d,mt,px,py,pz,rz,id,nm){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mt);m.position.set(px,py,pz);if(rz)m.rotation.z=rz;if(id){m.userData={id,name:nm};ct.push(m)}intG.add(m);return m}
+function pl(c,i,r,px,py,pz){const l=new THREE.PointLight(c,i,r);l.position.set(px,py,pz);intG.add(l)}
+// King's
+const kcY=61;bx(7.5,4.2,4,gm,1.5,kcY,0,0,'kings',"King's Chamber");pl(0xffbb66,1.2,25,1.5,kcY,0);
+const sg=new THREE.Group();sg.add(new THREE.Mesh(new THREE.BoxGeometry(2.8,1.2,1.2),new THREE.MeshBasicMaterial({color:0x993333,depthTest:false})));const si=new THREE.Mesh(new THREE.BoxGeometry(2.2,.7,.65),new THREE.MeshBasicMaterial({color:0x661111,depthTest:false}));si.position.y=.35;sg.add(si);sg.position.set(3,kcY-1.5,0);intG.add(sg);
+for(let i=0;i<5;i++){bx(7.2,1,3.7,i<4?lm:gm,1.5,kcY+2.1+1.2+i*1.6,0);if(i<4)bx(8.5,.3,5,gm,1.5,kcY+2.1+.6+i*1.6,0)}
+const chevron=new THREE.Mesh(new THREE.ConeGeometry(5.5,4,4),lm);chevron.position.set(1.5,kcY+12.5,0);chevron.rotation.y=Math.PI/4;intG.add(chevron);
+// Queen's
+const qcY=33;bx(5.2,3.2,3.2,lm,0,qcY,0,0,'queens',"Queen's Chamber");pl(0xddaa55,.8,18,0,qcY,0);
+const gb=new THREE.Mesh(new THREE.ConeGeometry(4,3.5,4),lm);gb.position.set(0,qcY+3.2,0);gb.rotation.y=Math.PI/4;gb.scale.z=.65;intG.add(gb);
+for(let i=0;i<5;i++)bx(1.8-i*.25,.8,.6-i*.08,lm,2.3,qcY-1.2+i*.8,0);
+// Gallery
+const mx=-4,my=(qcY+kcY)/2;
+for(let i=0;i<7;i++){const w=2.2-i*.16,sh=6/7;const m=new THREE.Mesh(new THREE.BoxGeometry(w,sh,33),new THREE.MeshBasicMaterial({color:new THREE.Color(.72-i*.02,.64-i*.02,.45-i*.01),side:THREE.DoubleSide}));m.position.set(mx,my-3+sh/2+i*sh,0);m.rotation.z=PA;if(i===0){m.userData={id:'gallery',name:'Grand Gallery'};ct.push(m)}intG.add(m)}
+for(let i=0;i<5;i++){pl(0xffaa44,.25,12,mx-Math.sin(PA)*(i/4-.5)*33*.6,my+Math.cos(PA)*(i/4-.5)*33*.6,0)}
+// Subterranean
+const scY=-14;bx(10,2.8,6,new THREE.MeshBasicMaterial({color:0x7a6a50}),0,scY,0,0,'sub','Subterranean Chamber');
+bx(2,2.5,2,new THREE.MeshBasicMaterial({color:0x2a1a10}),0,scY-2.65,0);pl(0xbb7733,.5,18,0,scY,0);
+// Passages
+bx(1.3,1.3,60,pm,12,8,0,PA);bx(1.3,1.3,28,pm,-1,26,0,-PA);bx(12,1.3,1.3,pm,0,qcY-2.5,0);
+// Entrance
+bx(3.5,3.5,4,glow,HF*.87,16,0,-.12,'entrance','Entrance');pl(0xffcc88,.6,12,HF*.87,16,0);
+// Shafts
+const shM=new THREE.MeshBasicMaterial({color:0xaa9868,transparent:true,opacity:.5});
+[[8,72,-12,.65],[8,48,-10,.55],[-8,72,12,-.65],[-8,48,10,-.55]].forEach(([sx,sy,sz,rz])=>{const sh=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,42,6),shM);sh.position.set(sx,sy,sz);sh.rotation.z=rz;intG.add(sh)});
+// Void
+const vd=new THREE.Mesh(new THREE.BoxGeometry(4,5,22),new THREE.MeshBasicMaterial({color:0x4488ff,transparent:true,opacity:.5,depthTest:false}));vd.position.set(-2,78,0);vd.rotation.z=PA*.5;vd.userData={id:'void_',name:'Big Void'};ct.push(vd);intG.add(vd);pl(0x4466cc,.4,15,-2,78,0);
+// Torches
+const tG=new THREE.CylinderGeometry(.08,.12,.8,6),tM=new THREE.MeshBasicMaterial({color:0x4a3020});
+[[3,kcY-1,2.1],[0,kcY-1,-2.1],[-2.5,qcY,1.6],[2.5,qcY,-1.6],[HF*.87+1,17,1.5],[mx+1,my-6,0],[mx-1,my+4,0],[2,scY,3]].forEach(([tx,ty,tz])=>{
+const torch=new THREE.Mesh(tG,tM);torch.position.set(tx,ty,tz);intG.add(torch);
+const fl=new THREE.Mesh(new THREE.SphereGeometry(.2,6,6),new THREE.MeshBasicMaterial({color:0xff8800,transparent:true,opacity:.8}));fl.position.set(tx,ty+.5,tz);fl.userData.fl=1;intG.add(fl);
+const lp=new THREE.PointLight(0xff8844,.4,8);lp.position.set(tx,ty+.5,tz);lp.userData.fl=1;intG.add(lp)});
+
+// TEST: Giant bright sphere at King's Chamber position
+const testSphere=new THREE.Mesh(
+  new THREE.SphereGeometry(8,12,12),
+  new THREE.MeshBasicMaterial({color:0xff00ff,depthTest:false,depthWrite:false})
+);
+testSphere.position.set(0,61,0);
+testSphere.renderOrder=9999;
+intG.add(testSphere);
+// Test box at entrance
+const testBox=new THREE.Mesh(
+  new THREE.BoxGeometry(15,15,15),
+  new THREE.MeshBasicMaterial({color:0x00ffff,depthTest:false,depthWrite:false})
+);
+testBox.position.set(0,35,0);
+testBox.renderOrder=9999;
+intG.add(testBox);
+scene.add(intG)}
+
+function buildSurroundings(){const sm=new THREE.MeshBasicMaterial({color:0xb89858,side:THREE.DoubleSide});
+function addPyr(geo,x,y,z){const m=new THREE.Mesh(geo,sm);m.position.set(x,y,z);m.rotation.y=Math.PI/4;m.castShadow=false;scene.add(m)}
+addPyr(new THREE.ConeGeometry(62,82,4),-280,41,185);
+addPyr(new THREE.ConeGeometry(34,48,4),-360,24,330);
+[[-160,280],[-195,310],[-225,340]].forEach(([x,z])=>addPyr(new THREE.ConeGeometry(12,18,4),x,9,z));
+// Scattered blocks
+for(let i=0;i<8;i++){const a=Math.random()*Math.PI*2,d=HF+5+Math.random()*30,s=.8+Math.random()*2.5;const bl=new THREE.Mesh(new THREE.BoxGeometry(s,s*.5,s*.8),new THREE.MeshBasicMaterial({color:new THREE.Color(.7+Math.random()*.12,.6+Math.random()*.1,.38+Math.random()*.08),side:THREE.DoubleSide}));bl.position.set(Math.cos(a)*d,s*.25,Math.sin(a)*d);bl.rotation.y=Math.random()*Math.PI;bl.castShadow=false;scene.add(bl)}
+// ═══ SPHINX ═══
+sphinxG=new THREE.Group();const sxM=new THREE.MeshBasicMaterial({color:0xc0a068,side:THREE.DoubleSide});
+// Body (lion)
+const body=new THREE.Mesh(new THREE.BoxGeometry(16,9,10),sxM);body.position.set(0,4.5,0);body.castShadow=false;sphinxG.add(body);
+// Haunches (rear, taller)
+const rear=new THREE.Mesh(new THREE.BoxGeometry(6,11,10),sxM);rear.position.set(-7,5.5,0);rear.castShadow=false;sphinxG.add(rear);
+// Front paws
+const pawM=new THREE.MeshBasicMaterial({color:0xb89858});
+const pawL=new THREE.Mesh(new THREE.BoxGeometry(14,3,3.5),pawM);pawL.position.set(8,1.5,3);pawL.castShadow=false;sphinxG.add(pawL);
+const pawR=new THREE.Mesh(new THREE.BoxGeometry(14,3,3.5),pawM);pawR.position.set(8,1.5,-3);pawR.castShadow=false;sphinxG.add(pawR);
+// Neck + Head
+const neck=new THREE.Mesh(new THREE.CylinderGeometry(3,4,5,8),sxM);neck.position.set(7,11.5,0);neck.castShadow=false;sphinxG.add(neck);
+const head=new THREE.Mesh(new THREE.SphereGeometry(3.5,10,10),new THREE.MeshBasicMaterial({color:0xc8a870}));head.position.set(8,15.5,0);head.scale.set(1,.9,.85);head.castShadow=false;sphinxG.add(head);
+// Nemes headdress
+const nemes=new THREE.Mesh(new THREE.BoxGeometry(2.5,4,8),new THREE.MeshBasicMaterial({color:0xb89050}));nemes.position.set(7,14,0);sphinxG.add(nemes);
+// Dream Stele between paws
+const stele=new THREE.Mesh(new THREE.BoxGeometry(.3,4,2.5),new THREE.MeshBasicMaterial({color:0xd4a855}));stele.position.set(12,2,0);sphinxG.add(stele);
+// Erosion marks (vertical grooves on enclosure walls)
+const erosionM=new THREE.MeshBasicMaterial({color:0x9a8058,transparent:true,opacity:.6});
+const eWall1=new THREE.Mesh(new THREE.BoxGeometry(40,.5,12),erosionM);eWall1.position.set(0,5,7);sphinxG.add(eWall1);
+const eWall2=new THREE.Mesh(new THREE.BoxGeometry(40,.5,12),erosionM);eWall2.position.set(0,5,-7);sphinxG.add(eWall2);
+// Hidden chamber indicator (beneath left paw)
+const cavity=new THREE.Mesh(new THREE.BoxGeometry(3,2,3),new THREE.MeshBasicMaterial({color:0xff8844,transparent:true,opacity:.3,wireframe:true}));cavity.position.set(10,-1,3);sphinxG.add(cavity);
+// Point light for the sphinx
+const sxL=new THREE.PointLight(0xffcc88,.3,30);sxL.position.set(8,18,0);sphinxG.add(sxL);
+sphinxG.position.set(170,0,195);sphinxG.castShadow=false;scene.add(sphinxG);
+// ═══ VALLEY TEMPLE ═══
+const vtG=new THREE.Group();const vtM=new THREE.MeshBasicMaterial({color:0x8a7060});
+// Main structure (massive limestone core)
+const vtMain=new THREE.Mesh(new THREE.BoxGeometry(22,8,18),vtM);vtMain.position.set(0,4,0);vtMain.castShadow=false;vtG.add(vtMain);
+// Granite cladding (darker, polished)
+const granM=new THREE.MeshBasicMaterial({color:0x6a4a4a});
+const vtClad=new THREE.Mesh(new THREE.BoxGeometry(22.5,8.2,18.5),new THREE.MeshBasicMaterial({color:0x5a3a3a,transparent:true,opacity:.4}));vtClad.position.set(0,4,0);vtG.add(vtClad);
+// 16 granite pillars inside
+for(let r=0;r<2;r++)for(let c=0;c<8;c++){const p=new THREE.Mesh(new THREE.CylinderGeometry(.6,.7,7,8),granM);p.position.set(-7+c*2,3.5,-3+r*6);vtG.add(p)}
+// Entrance
+const vtEnt=new THREE.Mesh(new THREE.BoxGeometry(4,6,1),new THREE.MeshBasicMaterial({color:0x1a1008}));vtEnt.position.set(0,3,9.5);vtG.add(vtEnt);
+const vtL=new THREE.PointLight(0xddaa66,.3,20);vtL.position.set(0,6,0);vtG.add(vtL);
+vtG.position.set(260,0,280);scene.add(vtG);
+// ═══ CAUSEWAY ═══
+const cwM=new THREE.MeshBasicMaterial({color:0xa89060});
+const cwLen=Math.hypot(260-100,280-100);
+const cwMesh=new THREE.Mesh(new THREE.BoxGeometry(cwLen,1.5,4),cwM);
+cwMesh.position.set((100+260)/2,.75,(100+280)/2);
+cwMesh.rotation.y=-Math.atan2(280-100,260-100);
+cwMesh.castShadow=false;scene.add(cwMesh);
+// Causeway walls
+const wallM=new THREE.MeshBasicMaterial({color:0x9a8050});
+const wall1=new THREE.Mesh(new THREE.BoxGeometry(cwLen,3,.5),wallM);
+wall1.position.copy(cwMesh.position);wall1.position.y=1.5;wall1.rotation.y=cwMesh.rotation.y;
+wall1.translateZ(2.2);scene.add(wall1);
+const wall2=wall1.clone();wall2.position.copy(cwMesh.position);wall2.position.y=1.5;wall2.rotation.y=cwMesh.rotation.y;
+wall2.translateZ(-2.2);scene.add(wall2)}
+
+function buildDust(){const n=800;const geo=new THREE.BufferGeometry();const pos=new Float32Array(n*3),vel=new Float32Array(n*3);for(let i=0;i<n;i++){pos[i*3]=Math.random()*20-10;pos[i*3+1]=Math.random()*15-5;pos[i*3+2]=Math.random()*20-10;vel[i*3]=(Math.random()-.5)*.015;vel[i*3+1]=Math.random()*.006;vel[i*3+2]=(Math.random()-.5)*.015}geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));dustP=new THREE.Points(geo,new THREE.PointsMaterial({color:0xd4a855,size:.09,transparent:true,opacity:.3,depthWrite:false,sizeAttenuation:true}));dustP.visible=false;dustP.userData.vel=vel;scene.add(dustP)}
+
+function buildHumans(){const h=1.17,fm=new THREE.MeshBasicMaterial({color:0x333333});
+function mp(geo,x,y,z){const m=new THREE.Mesh(geo,fm);m.position.set(x,y,z);return m}
+[[HF*.87+5,h/2+.5,4],[10,h/2,8],[0,61-1.6,1.5],[0,33-1.2,-1],[-4,47,1]].forEach(([fx,fy,fz])=>{const fg=new THREE.Group();
+fg.add(mp(new THREE.CylinderGeometry(.13,.1,h*.55,8),0,h*.28,0));
+fg.add(mp(new THREE.SphereGeometry(.1,8,8),0,h*.62,0));
+fg.add(mp(new THREE.CylinderGeometry(.05,.04,h*.42,6),.05,0,0));
+fg.add(mp(new THREE.CylinderGeometry(.05,.04,h*.42,6),-.05,0,0));
+fg.position.set(fx,fy,fz);fg.visible=false;humanFigs.push(fg);scene.add(fg)})}
+
+// ═══ SCIENTIFIC OVERLAYS ═══
+function buildEMField(){
+  // Animated EM energy concentration zones (spheres with pulsing)
+  const emMat=new THREE.MeshBasicMaterial({color:0x4488ff,transparent:true,opacity:.15,side:THREE.DoubleSide,wireframe:true});
+  // King's Chamber zone
+  const z1=new THREE.Mesh(new THREE.SphereGeometry(6,16,16),emMat);z1.position.set(1.5,61,0);emFieldMeshes.push(z1);scene.add(z1);
+  // Queen's Chamber zone
+  const z2=new THREE.Mesh(new THREE.SphereGeometry(4.5,16,16),emMat.clone());z2.position.set(0,33,0);emFieldMeshes.push(z2);scene.add(z2);
+  // Sub-base zone (strongest)
+  const z3=new THREE.Mesh(new THREE.SphereGeometry(10,20,20),emMat.clone());z3.position.set(0,-10,0);emFieldMeshes.push(z3);scene.add(z3);
+  // Apex zone
+  const z4=new THREE.Mesh(new THREE.SphereGeometry(4,12,12),emMat.clone());z4.position.set(0,H-5,0);emFieldMeshes.push(z4);scene.add(z4);
+  // Field lines (vertical energy flow)
+  const lineMat=new THREE.LineBasicMaterial({color:0x4488ff,transparent:true,opacity:.2});
+  for(let i=0;i<12;i++){const a=i/12*Math.PI*2,r=HF*.3;const pts=[new THREE.Vector3(Math.cos(a)*r,-15,Math.sin(a)*r),new THREE.Vector3(Math.cos(a)*r*.5,H*.5,Math.sin(a)*r*.5),new THREE.Vector3(0,H,0)];const curve=new THREE.QuadraticBezierCurve3(...pts);const g=new THREE.BufferGeometry().setFromPoints(curve.getPoints(20));const l=new THREE.Line(g,lineMat);emFieldMeshes.push(l);scene.add(l)}
+  emFieldMeshes.forEach(m=>{m.visible=false;m.frustumCulled=false});
+}
+
+function buildAcousticWaves(){
+  const wMat=new THREE.MeshBasicMaterial({color:0x44cc88,transparent:true,opacity:.1,side:THREE.DoubleSide,wireframe:true});
+  // KC standing waves
+  for(let i=0;i<4;i++){const r=new THREE.Mesh(new THREE.TorusGeometry(2+i*1.2,.08,8,32),wMat.clone());r.position.set(1.5,61,0);r.rotation.x=Math.PI/2;acWaves.push(r);scene.add(r)}
+  // QC standing waves
+  for(let i=0;i<3;i++){const r=new THREE.Mesh(new THREE.TorusGeometry(1.5+i,.06,8,32),wMat.clone());r.position.set(0,33,0);r.rotation.x=Math.PI/2;acWaves.push(r);scene.add(r)}
+  // Gallery resonance rings
+  for(let i=0;i<6;i++){const r=new THREE.Mesh(new THREE.TorusGeometry(1,.04,6,24),wMat.clone());const t=(i/5-.5)*28;r.position.set(-4-Math.sin(PA)*t,(33+61)/2+Math.cos(PA)*t,0);r.rotation.z=PA;acWaves.push(r);scene.add(r)}
+  // ═══ 432 Hz GOLDEN RING at KC ═══
+  const hz432=new THREE.Mesh(new THREE.TorusGeometry(5,.15,8,48),new THREE.MeshBasicMaterial({color:0xffaa00,transparent:true,opacity:.12,wireframe:false}));
+  hz432.position.set(1.5,61,0);hz432.rotation.x=Math.PI/2;hz432.visible=false;hz432.userData.hz432=true;acWaves.push(hz432);scene.add(hz432);
+  // ═══ HELMHOLTZ RESONATOR viz (Subterranean dead-end) ═══
+  const helmPts=[];for(let i=0;i<=40;i++){const t=i/40;helmPts.push(new THREE.Vector3(0,-14,t*16-8))}
+  const helm=new THREE.Line(new THREE.BufferGeometry().setFromPoints(helmPts),new THREE.LineBasicMaterial({color:0x44cc88,transparent:true,opacity:.3}));helm.visible=false;acWaves.push(helm);scene.add(helm);
+  // Infrasound pressure waves (5 Hz) in subterranean
+  for(let i=0;i<3;i++){const w=new THREE.Mesh(new THREE.RingGeometry(1+i*2.5,1.5+i*2.5,24),new THREE.MeshBasicMaterial({color:0x44cc88,transparent:true,opacity:.06,side:THREE.DoubleSide}));
+    w.position.set(0,-14,-8+i*5);w.visible=false;acWaves.push(w);scene.add(w)}
+  // ═══ SCHUMANN RESONANCE RING at ground level ═══
+  const schPts=[];for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;schPts.push(new THREE.Vector3(Math.cos(a)*HF*1.1,0,Math.sin(a)*HF*1.1))}
+  const sch=new THREE.Line(new THREE.BufferGeometry().setFromPoints(schPts),new THREE.LineBasicMaterial({color:0x22ffaa,transparent:true,opacity:.1}));sch.visible=false;acWaves.push(sch);scene.add(sch);
+  acWaves.forEach(m=>{m.visible=false;m.frustumCulled=false});
+}
+
+function buildThermalMap(){
+  thHeatmap=new THREE.Mesh(
+    new THREE.PlaneGeometry(153,97),
+    new THREE.MeshBasicMaterial({color:0xff4422,transparent:true,opacity:.2,side:THREE.DoubleSide,depthWrite:false})
+  );
+  thHeatmap.position.set(0,97/2,153/2+1);thHeatmap.visible=false;scene.add(thHeatmap);
+}
+
+function buildStarLines(){
+  const slM=new THREE.LineBasicMaterial({color:0xcc88ff,transparent:true,opacity:.4});
+  // 4 shaft lines to stars
+  [[8,72,-12,40,300,-250],[8,48,-10,30,250,-200],[-8,72,12,-40,300,250],[-8,48,10,-30,250,200]].forEach(([sx,sy,sz,ex,ey,ez])=>{
+    const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(sx,sy,sz),new THREE.Vector3(ex,ey,ez)]),slM);l.visible=false;starLines.push(l);scene.add(l);
+    const sp=new THREE.Mesh(new THREE.SphereGeometry(2,8,8),new THREE.MeshBasicMaterial({color:0xcc88ff,transparent:true,opacity:.5}));sp.position.set(ex,ey,ez);sp.visible=false;starLines.push(sp);scene.add(sp)});
+  // ═══ ORION'S BELT — 3 stars above 3 pyramids ═══
+  const orionMat=new THREE.MeshBasicMaterial({color:0xeeddff,transparent:true,opacity:.6});
+  [[0,320,0,3],[-280,320,185,2.5],[-360,320,330,1.8]].forEach(([x,y,z,r])=>{
+    const star=new THREE.Mesh(new THREE.SphereGeometry(r,8,8),orionMat.clone());star.position.set(x,y,z);star.visible=false;starLines.push(star);scene.add(star)});
+  // Orion belt connecting line
+  const beltPts=[new THREE.Vector3(0,320,0),new THREE.Vector3(-280,320,185),new THREE.Vector3(-360,320,330)];
+  const belt=new THREE.Line(new THREE.BufferGeometry().setFromPoints(beltPts),new THREE.LineBasicMaterial({color:0xcc88ff,transparent:true,opacity:.2}));belt.visible=false;starLines.push(belt);scene.add(belt);
+  // ═══ PRECESSION CIRCLE (25,920 yr) ═══
+  const precPts=[];for(let i=0;i<=72;i++){const a=i/72*Math.PI*2;precPts.push(new THREE.Vector3(Math.cos(a)*40,300,Math.sin(a)*40))}
+  const prec=new THREE.Line(new THREE.BufferGeometry().setFromPoints(precPts),new THREE.LineBasicMaterial({color:0x8866cc,transparent:true,opacity:.2}));prec.visible=false;starLines.push(prec);scene.add(prec);
+  // Precession marker (current epoch dot)
+  const precDot=new THREE.Mesh(new THREE.SphereGeometry(1.5,6,6),new THREE.MeshBasicMaterial({color:0xff8844,transparent:true,opacity:.5}));precDot.position.set(40,300,0);precDot.visible=false;precDot.userData.precDot=true;starLines.push(precDot);scene.add(precDot);
+  // ═══ MILKY WAY LINE (mirrors Nile) ═══
+  const milkyPts=[];for(let i=0;i<30;i++){const t=i/29;milkyPts.push(new THREE.Vector3(200-t*500,310+Math.sin(t*3)*20,-100+t*600))}
+  const milky=new THREE.Line(new THREE.BufferGeometry().setFromPoints(milkyPts),new THREE.LineBasicMaterial({color:0x6655aa,transparent:true,opacity:.12}));milky.visible=false;starLines.push(milky);scene.add(milky);
+  // ═══ LEO CONSTELLATION (east of Sphinx) ═══
+  const leoStars=[[240,280,195],[255,285,190],[250,290,200],[260,282,205],[270,278,195],[265,272,200]];
+  const leoMat=new THREE.MeshBasicMaterial({color:0xffcc66,transparent:true,opacity:.35});
+  leoStars.forEach(([x,y,z])=>{const s=new THREE.Mesh(new THREE.SphereGeometry(.8,6,6),leoMat);s.position.set(x,y,z);s.visible=false;starLines.push(s);scene.add(s)});
+}
+
+function buildGeoLayers(){
+  const layers=[
+    {y:-20,h:15,color:0x8B7355},{y:-5,h:8,color:0xa08860},{y:3,h:2,color:0xd4c8a0}];
+  layers.forEach(l=>{const g=new THREE.Mesh(new THREE.BoxGeometry(B*1.2,l.h,B*1.2),new THREE.MeshBasicMaterial({color:l.color,transparent:true,opacity:.2,side:THREE.DoubleSide}));g.position.y=l.y+l.h/2;g.visible=false;geoLayers.push(g);scene.add(g)});
+  // ═══ UNDERGROUND TUNNEL NETWORK (glowing) ═══
+  const tunMat=new THREE.MeshBasicMaterial({color:0xff8844,transparent:true,opacity:.12,side:THREE.DoubleSide});
+  const tunPaths=[
+    [[0,-14,0],[0,-18,15],[20,-20,40],[60,-18,80],[120,-16,140],[170,-12,195]], // Sub→Sphinx
+    [[0,-14,0],[-40,-18,-20],[-120,-20,20],[-200,-18,100],[-280,-16,185]], // Sub→2nd Pyramid
+    [[170,-12,195],[170,-20,195],[170,-30,195]], // Sphinx→deep (Osiris)
+    [[0,-14,0],[0,-20,0],[0,-30,0]], // Sub→deep
+    [[170,-20,195],[100,-22,140],[30,-20,60],[0,-18,20],[0,-14,0]], // Collins loop
+  ];
+  tunPaths.forEach(path=>{for(let i=0;i<path.length-1;i++){
+    const a=path[i],b=path[i+1];const d=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);
+    const tun=new THREE.Mesh(new THREE.CylinderGeometry(.8,.8,d,6),tunMat);
+    tun.position.set((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);
+    tun.lookAt(new THREE.Vector3(...b));tun.rotateX(Math.PI/2);
+    tun.visible=false;geoLayers.push(tun);scene.add(tun)}});
+  // ═══ OSIRIS SHAFT (3 levels + water) ═══
+  const osiMat=new THREE.MeshBasicMaterial({color:0x7a6a50,transparent:true,opacity:.15,wireframe:true});
+  [[-10,8],[-20,6],[-30,5]].forEach(([y,r])=>{
+    const lev=new THREE.Mesh(new THREE.CylinderGeometry(r,r,3,8),osiMat);
+    lev.position.set(170,y,195);lev.visible=false;geoLayers.push(lev);scene.add(lev)});
+  // Osiris water island
+  const osiWater=new THREE.Mesh(new THREE.CylinderGeometry(4,.5,1,12),new THREE.MeshBasicMaterial({color:0x2244aa,transparent:true,opacity:.15}));
+  osiWater.position.set(170,-30,195);osiWater.visible=false;osiWater.userData.osiWater=true;geoLayers.push(osiWater);scene.add(osiWater);
+  // Osiris sarcophagus
+  const osiSarc=new THREE.Mesh(new THREE.BoxGeometry(2,1,1),new THREE.MeshBasicMaterial({color:0x904858,transparent:true,opacity:.2}));
+  osiSarc.position.set(170,-29,195);osiSarc.visible=false;geoLayers.push(osiSarc);scene.add(osiSarc);
+  // ═══ SPHINX CHAMBER (bigger, pulsing) ═══
+  const sphChamber=new THREE.Mesh(new THREE.BoxGeometry(12,4,9),new THREE.MeshBasicMaterial({color:0xff8844,transparent:true,opacity:.08,wireframe:true}));
+  sphChamber.position.set(180,-4,198);sphChamber.visible=false;sphChamber.userData.sphChamber=true;geoLayers.push(sphChamber);scene.add(sphChamber);
+  // ═══ SECOND SPHINX outline ═══
+  const sph2=new THREE.Mesh(new THREE.BoxGeometry(16,9,10),new THREE.MeshBasicMaterial({color:0xc09858,transparent:true,opacity:.06,wireframe:true}));
+  sph2.position.set(370,4.5,195);sph2.visible=false;geoLayers.push(sph2);scene.add(sph2);
+  const sph2Label=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial({color:0xff4422,transparent:true,opacity:.15}));
+  sph2Label.position.set(370,12,195);sph2Label.visible=false;geoLayers.push(sph2Label);scene.add(sph2Label);
+  // ═══ QUARRY MARKS ═══
+  const qMat=new THREE.LineBasicMaterial({color:0xaa7744,transparent:true,opacity:.2});
+  for(let i=0;i<8;i++){const x=-30+i*8;const pts=[new THREE.Vector3(x,.5,HF+10),new THREE.Vector3(x,.5,HF+25)];
+    const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),qMat);l.visible=false;geoLayers.push(l);scene.add(l)}
+  // ═══ WELL SHAFT (inside pyramid, connecting Gallery to Sub) ═══
+  const wellPts=[new THREE.Vector3(5,47,0),new THREE.Vector3(8,30,2),new THREE.Vector3(10,15,4),new THREE.Vector3(12,0,-2),new THREE.Vector3(10,-10,0)];
+  const well=new THREE.Line(new THREE.BufferGeometry().setFromPoints(wellPts),new THREE.LineBasicMaterial({color:0xaa7744,transparent:true,opacity:.3}));
+  well.visible=false;geoLayers.push(well);scene.add(well);
+  // Grotto (natural cave)
+  const grotto=new THREE.Mesh(new THREE.SphereGeometry(2.5,8,8),new THREE.MeshBasicMaterial({color:0x7a6a50,wireframe:true,transparent:true,opacity:.12}));
+  grotto.position.set(10,0,0);grotto.visible=false;geoLayers.push(grotto);scene.add(grotto);
+  // ═══ ASWAN TRANSPORT LINE ═══
+  const aswPts=[new THREE.Vector3(0,1,-HF-5),new THREE.Vector3(0,1,-HF-80)];
+  const asw=new THREE.Line(new THREE.BufferGeometry().setFromPoints(aswPts),new THREE.LineBasicMaterial({color:0x904858,transparent:true,opacity:.15}));
+  asw.visible=false;geoLayers.push(asw);scene.add(asw);
+  // ═══ WATER TABLE (animated, prominent) ═══
+  const wtGeo=new THREE.PlaneGeometry(B*3,B*3,20,20);
+  const wtPos=wtGeo.attributes.position;
+  for(let i=0;i<wtPos.count;i++){wtPos.setZ(i,Math.sin(wtPos.getX(i)*.05)*0.5)}
+  const waterTable=new THREE.Mesh(wtGeo,new THREE.MeshBasicMaterial({color:0x2266cc,transparent:true,opacity:.06,side:THREE.DoubleSide,wireframe:false}));
+  waterTable.rotation.x=-Math.PI/2;waterTable.position.y=-12;waterTable.visible=false;waterTable.userData.waterTable=true;geoLayers.push(waterTable);scene.add(waterTable);
+}
+
+function buildMathOverlays(){
+  const piMat=new THREE.LineBasicMaterial({color:0xd4a855,transparent:true,opacity:.3});
+  // π circle at base
+  const circPts=[];for(let i=0;i<=64;i++){const a=i/64*Math.PI*2;circPts.push(new THREE.Vector3(Math.cos(a)*HF,0,Math.sin(a)*HF))}
+  const circLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints(circPts),piMat);circLine.visible=false;mathOverlays.push(circLine);scene.add(circLine);
+  // Height line (H = radius of π circle)
+  const hLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,H,0)]),new THREE.LineBasicMaterial({color:0xff8844,transparent:true,opacity:.5}));
+  hLine.visible=false;mathOverlays.push(hLine);scene.add(hLine);
+  // Golden spiral (φ)
+  const spiralPts=[];for(let i=0;i<200;i++){const t=i*.08;const r=2*Math.pow(1.618,t/(Math.PI*2))*1.5;spiralPts.push(new THREE.Vector3(Math.cos(t)*r,i*.4,Math.sin(t)*r))}
+  const spiral=new THREE.Line(new THREE.BufferGeometry().setFromPoints(spiralPts),new THREE.LineBasicMaterial({color:0xd4a855,transparent:true,opacity:.25}));
+  spiral.visible=false;mathOverlays.push(spiral);scene.add(spiral);
+  // ═══ 5 PLATONIC SOLIDS orbiting King's Chamber ═══
+  const platMat=new THREE.MeshBasicMaterial({color:0xd4a855,wireframe:true,transparent:true,opacity:.25});
+  const platG=[
+    new THREE.TetrahedronGeometry(2.5),
+    new THREE.BoxGeometry(3.5,3.5,3.5),
+    new THREE.OctahedronGeometry(2.8),
+    new THREE.DodecahedronGeometry(2.5),
+    new THREE.IcosahedronGeometry(2.5)
+  ];
+  platG.forEach((g,i)=>{const m=new THREE.Mesh(g,platMat.clone());m.position.set(1.5,61,0);m.userData.platonic=i;m.visible=false;mathOverlays.push(m);scene.add(m)});
+  // ═══ DNA DOUBLE HELIX ═══
+  const dnaMat1=new THREE.LineBasicMaterial({color:0xff6644,transparent:true,opacity:.35});
+  const dnaMat2=new THREE.LineBasicMaterial({color:0x4488ff,transparent:true,opacity:.35});
+  const dnaR=4,dnaH=H*.8,dnaTurns=8;
+  const dna1=[],dna2=[],dnaRungs=[];
+  for(let i=0;i<=200;i++){const t=i/200*dnaTurns*Math.PI*2;const y=i/200*dnaH;
+    dna1.push(new THREE.Vector3(Math.cos(t)*dnaR+HF*.6,y,Math.sin(t)*dnaR));
+    dna2.push(new THREE.Vector3(Math.cos(t+Math.PI)*dnaR+HF*.6,y,Math.sin(t+Math.PI)*dnaR))}
+  const helix1=new THREE.Line(new THREE.BufferGeometry().setFromPoints(dna1),dnaMat1);helix1.visible=false;mathOverlays.push(helix1);scene.add(helix1);
+  const helix2=new THREE.Line(new THREE.BufferGeometry().setFromPoints(dna2),dnaMat2);helix2.visible=false;mathOverlays.push(helix2);scene.add(helix2);
+  // DNA rungs (base pairs) every 10 steps
+  const rungMat=new THREE.LineBasicMaterial({color:0x44cc88,transparent:true,opacity:.2});
+  for(let i=0;i<200;i+=10){const r=new THREE.Line(new THREE.BufferGeometry().setFromPoints([dna1[i],dna2[i]]),rungMat);r.visible=false;mathOverlays.push(r);scene.add(r)}
+  // ═══ FIBONACCI RECTANGLES ═══
+  const fibMat=new THREE.LineBasicMaterial({color:0xd4a855,transparent:true,opacity:.15});
+  const fib=[1,1,2,3,5,8,13,21];let fx=-HF*.4,fz=-HF*.4;
+  fib.forEach((f,i)=>{const s=f*2;const pts=[new THREE.Vector3(fx,1,fz),new THREE.Vector3(fx+s,1,fz),new THREE.Vector3(fx+s,1,fz+s),new THREE.Vector3(fx,1,fz+s),new THREE.Vector3(fx,1,fz)];
+    const r=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),fibMat);r.visible=false;mathOverlays.push(r);scene.add(r);
+    if(i%2===0)fx+=s;else fz+=s});
+  // ═══ SACRED CUBIT MARKERS ═══
+  const cubitMat=new THREE.LineBasicMaterial({color:0xffaa22,transparent:true,opacity:.2});
+  for(let i=0;i<10;i++){const y=i*H/9;const pts=[new THREE.Vector3(-HF-.5,y,0),new THREE.Vector3(-HF-3,y,0)];
+    const m=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),cubitMat);m.visible=false;mathOverlays.push(m);scene.add(m)}
+}
+
+// ═══ SAND PARTICLES (exterior) ═══
+function buildSand(){const n=1500,geo=new THREE.BufferGeometry(),pos=new Float32Array(n*3);for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,d=50+Math.random()*400;pos[i*3]=Math.cos(a)*d;pos[i*3+1]=Math.random()*25;pos[i*3+2]=Math.sin(a)*d}geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));sandP=new THREE.Points(geo,new THREE.PointsMaterial({color:0xc8a060,size:.15,transparent:true,opacity:.18,depthWrite:false,sizeAttenuation:true}));scene.add(sandP)}
+
+// ═══ GOD RAYS ═══
+function buildGodRays(){const mat=new THREE.MeshBasicMaterial({color:0xfff8dd,transparent:true,opacity:.025,side:THREE.DoubleSide,depthWrite:false});
+const g1=new THREE.Mesh(new THREE.ConeGeometry(5,18,8,1,true),mat);g1.position.set(HF*.85,14,0);g1.rotation.z=-.3;g1.visible=false;godRays.push(g1);scene.add(g1);
+const bMat=mat.clone();bMat.opacity=.012;
+[[8,72,-12,.65],[8,48,-10,.55]].forEach(([sx,sy,sz,rz])=>{const b=new THREE.Mesh(new THREE.CylinderGeometry(.12,.7,30,6,1,true),bMat);b.position.set(sx,sy,sz);b.rotation.z=rz;b.visible=false;godRays.push(b);scene.add(b)})}
+
+// ═══ WHITE CASING ═══
+function buildCasing(){const caseMat=new THREE.MeshBasicMaterial({color:0xf0ece0,transparent:true,opacity:.7,side:THREE.DoubleSide});
+const layers=25,lh=H/layers;for(let i=0;i<layers;i++){const t1=i/layers,t2=(i+1)/layers;const r1=(HF+.5)*(1-t1),r2=(HF+.5)*(1-t2);const geo=new THREE.CylinderGeometry(r2,r1,lh,4,1);geo.rotateY(Math.PI/4);const m=new THREE.Mesh(geo,caseMat);m.position.y=i*lh+lh/2;m.visible=false;casingShells.push(m);scene.add(m)}}
+
+// ═══ MUON PARTICLES ═══
+function buildMuons(){const n=200,geo=new THREE.BufferGeometry(),pos=new Float32Array(n*3);muonVel=new Float32Array(n);for(let i=0;i<n;i++){pos[i*3]=(Math.random()-.5)*B*1.2;pos[i*3+1]=H+50+Math.random()*100;pos[i*3+2]=(Math.random()-.5)*B*1.2;muonVel[i]=.3+Math.random()*.4}geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));muonParticles=new THREE.Points(geo,new THREE.PointsMaterial({color:0x8866cc,size:.2,transparent:true,opacity:.4,depthWrite:false,sizeAttenuation:true}));muonParticles.visible=false;scene.add(muonParticles)}
+
+// ═══ FULLSCREEN ═══
+function toggleFS(){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()}
+function scrollCtrls(dir){const c=document.getElementById('ctrls');c.scrollBy({left:dir*120,behavior:'smooth'})}
+
+// ═══ CASING TOGGLE ═══
+function toggleCasing(){if(!checkPro("casing"))return;casingOn=!casingOn;casingShells.forEach(s=>s.visible=casingOn);document.getElementById('casing-info').style.display=casingOn?'block':'none';document.querySelector('[onclick="toggleCasing()" aria-label="Toggle original white casing"]')?.classList.toggle('on',casingOn)}
+
+// ═══ NIGHT MODE ═══
+function toggleNight(){if(!checkPro("night"))return;nightOn=!nightOn;document.body.classList.toggle('night',nightOn);document.getElementById('night-label').classList.toggle('show',nightOn);document.querySelector('[onclick="toggleNight()" aria-label="Toggle night mode"]')?.classList.toggle('on',nightOn);
+if(nightOn){sunL.intensity=.05;sunL.color.set(0x334488);ambL.intensity=.06;ambL.color.set(0x0a0a1a)}else{onTime({target:document.getElementById('ts')})}}
+
+// ═══ SCALE TOGGLE ═══
+function toggleScale(){if(!checkPro("scale"))return;scaleOn=!scaleOn;document.getElementById('scale-panel').classList.toggle('show',scaleOn);document.querySelector('[onclick="toggleScale()" aria-label="Scale comparison"]')?.classList.toggle('on',scaleOn)}
+
+// ═══ ENERGY FIELD ═══
+function buildEnergyField(){
+  // Telluric current lines (brighter)
+  const telMat=new THREE.LineBasicMaterial({color:0xff8844,transparent:true,opacity:.2});
+  for(let i=0;i<12;i++){const pts=[];const a=i/12*Math.PI*2;for(let j=0;j<20;j++){const t=j/19;pts.push(new THREE.Vector3(Math.cos(a)*HF*t*1.5,-5-Math.sin(t*Math.PI)*8,Math.sin(a)*HF*t*1.5))}
+    const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),telMat);l.visible=false;energyMeshes.push(l);scene.add(l)}
+  // ═══ AQUIFER (animated water plane) ═══
+  const aquifer=new THREE.Mesh(new THREE.PlaneGeometry(B*2.5,B*2.5,16,16),new THREE.MeshBasicMaterial({color:0x2244aa,transparent:true,opacity:.1,side:THREE.DoubleSide}));
+  aquifer.rotation.x=-Math.PI/2;aquifer.position.y=-8;aquifer.visible=false;aquifer.userData.aquifer=true;energyMeshes.push(aquifer);scene.add(aquifer);
+  // ═══ PIEZO SPARKS (bigger, in all chambers) ═══
+  const sparkMat=new THREE.MeshBasicMaterial({color:0xff8844,transparent:true,opacity:.2});
+  [[1.5,61,0,1.2],[0,33,0,.8],[-4,47,0,.6],[0,-14,0,1.5]].forEach(([px,py,pz,r])=>{
+    const spark=new THREE.Mesh(new THREE.SphereGeometry(r,8,8),sparkMat.clone());spark.position.set(px,py,pz);spark.visible=false;energyMeshes.push(spark);scene.add(spark)});
+  // ═══ ION CONE (apex, bigger) ═══
+  const ionCone=new THREE.Mesh(new THREE.ConeGeometry(12,25,16,1,true),new THREE.MeshBasicMaterial({color:0xff6622,transparent:true,opacity:.05,side:THREE.DoubleSide,depthWrite:false}));
+  ionCone.position.set(0,H+12,0);ionCone.visible=false;energyMeshes.push(ionCone);scene.add(ionCone);
+  // ═══ CHARGE FLOW PARTICLES (rising) ═══
+  const cfN=120,cfGeo=new THREE.BufferGeometry(),cfPos=new Float32Array(cfN*3);
+  for(let i=0;i<cfN;i++){cfPos[i*3]=(Math.random()-.5)*30;cfPos[i*3+1]=Math.random()*H;cfPos[i*3+2]=(Math.random()-.5)*30}
+  cfGeo.setAttribute('position',new THREE.Float32BufferAttribute(cfPos,3));
+  const chargeP=new THREE.Points(cfGeo,new THREE.PointsMaterial({color:0xff6622,size:.4,transparent:true,opacity:.35,depthWrite:false,sizeAttenuation:true}));
+  chargeP.visible=false;chargeP.userData.charge=true;energyMeshes.push(chargeP);scene.add(chargeP);
+  // ═══ TESLA DISCHARGE (apex, bigger bolts) ═══
+  for(let i=0;i<8;i++){const pts=[];const a=i/8*Math.PI*2;for(let j=0;j<15;j++){const t=j/14;const jitter=(Math.random()-.5)*4;
+    pts.push(new THREE.Vector3(Math.cos(a)*(1-t)*10+jitter,H+t*22,Math.sin(a)*(1-t)*10+jitter))}
+    const bolt=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0xff8844,transparent:true,opacity:.2}));bolt.visible=false;bolt.userData.tesla=true;energyMeshes.push(bolt);scene.add(bolt)}
+  // ═══ STREAMING POTENTIAL ARROWS ═══
+  const spMat=new THREE.LineBasicMaterial({color:0x4488ff,transparent:true,opacity:.15});
+  for(let i=0;i<16;i++){const a=i/16*Math.PI*2;const pts=[new THREE.Vector3(Math.cos(a)*HF*.2,-8,Math.sin(a)*HF*.2),new THREE.Vector3(Math.cos(a)*HF*.9,-8,Math.sin(a)*HF*.9)];
+    const arrow=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),spMat);arrow.visible=false;energyMeshes.push(arrow);scene.add(arrow)}
+  // ═══ PIEZO CRYSTAL LATTICE (KC, bigger) ═══
+  const latMat=new THREE.MeshBasicMaterial({color:0xffaa44,wireframe:true,transparent:true,opacity:.08});
+  for(let x=-2;x<=2;x++)for(let y=-1;y<=1;y++)for(let z=-1;z<=1;z++){
+    const cube=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),latMat);cube.position.set(1.5+x*1.3,61+y*1.3,z*1.3);cube.visible=false;energyMeshes.push(cube);scene.add(cube)}
+  // ═══ GREAT CIRCLE (Giza→Easter Island) ═══
+  const gcPts=[];for(let i=0;i<=80;i++){const a=i/80*Math.PI*2;gcPts.push(new THREE.Vector3(Math.cos(a)*HF*5,.5,Math.sin(a)*HF*5))}
+  const gc=new THREE.Line(new THREE.BufferGeometry().setFromPoints(gcPts),new THREE.LineBasicMaterial({color:0xff8844,transparent:true,opacity:.1}));gc.visible=false;energyMeshes.push(gc);scene.add(gc);
+  // ═══ MEGALITHIC SITES on great circle ═══
+  const siteMat=new THREE.MeshBasicMaterial({color:0xff6622,transparent:true,opacity:.25});
+  [[HF*5,0],[HF*3.8,HF*3],[HF*1,HF*4.8],[-HF*2.5,HF*4],[-HF*4.5,HF*1.5],[-HF*4,-HF*2.5],[HF*2,-HF*4.5]].forEach(([sx,sz])=>{
+    const m=new THREE.Mesh(new THREE.ConeGeometry(1.2,3,4),siteMat);m.position.set(sx,2,sz);m.visible=false;energyMeshes.push(m);scene.add(m)});
+  // ═══ EARTH WIREFRAME (1:43,200 scale reference) ═══
+  const earthR=HF*1.3;
+  const earth=new THREE.Mesh(new THREE.SphereGeometry(earthR,24,24),new THREE.MeshBasicMaterial({color:0x4488ff,wireframe:true,transparent:true,opacity:.04}));
+  earth.position.set(-HF*2,earthR,0);earth.visible=false;earth.userData.earth=true;energyMeshes.push(earth);scene.add(earth);
+  // ═══ UNDERGROUND HYDRAULIC ARROWS (Sub→up) ═══
+  const hydrPts=[new THREE.Vector3(0,-14,0),new THREE.Vector3(-2,-5,0),new THREE.Vector3(-4,8,0),new THREE.Vector3(-4,26,0),new THREE.Vector3(-4,47,0),new THREE.Vector3(1.5,61,0)];
+  const hydr=new THREE.Line(new THREE.BufferGeometry().setFromPoints(hydrPts),new THREE.LineBasicMaterial({color:0x22aaff,transparent:true,opacity:.2}));
+  hydr.visible=false;energyMeshes.push(hydr);scene.add(hydr);
+}
+
+// ═══ CONSTRUCTION ANIMATION ═══
+const C_PHASES=[{y:'~2580 BCE',p:'Site survey & leveling',pct:0},{y:'~2578 BCE',p:'Subterranean Chamber carved into bedrock',pct:8},{y:'~2575 BCE',p:'Lower courses laid, plan shifts upward',pct:18},{y:'~2573 BCE',p:"Queen's Chamber constructed at center axis",pct:30},{y:'~2571 BCE',p:'Grand Gallery — 7 corbelled courses rising 46.7 m',pct:45},{y:'~2568 BCE',p:"King's Chamber — 80-tonne granite beams from Aswan",pct:62},{y:'~2565 BCE',p:'Upper courses & air shafts aligned to stars',pct:78},{y:'~2562 BCE',p:'Capstone placed, Tura limestone casing top-down',pct:92},{y:'~2560 BCE',p:'Completed. Entrance sealed with pivot stone.',pct:100}];
+function toggleConstruct(){if(!checkPro("construct"))return;constructOn=!constructOn;document.getElementById('construct').classList.toggle('show',constructOn);document.querySelector('[onclick="toggleConstruct()"]')?.classList.toggle('on',constructOn);if(constructOn){cTime=0;cPaused=false;drawConstruct()}}
+function cSpeed(d){cSpd=Math.max(.25,Math.min(4,cSpd+d*.5))}
+function cPause(){cPaused=!cPaused}
+function drawConstruct(){if(!constructOn)return;if(!cPaused)cTime+=.003*cSpd;if(cTime>1)cTime=0;
+const cv=document.getElementById('c-canvas'),cx=cv.getContext('2d');cx.clearRect(0,0,800,500);
+const pct=cTime*100;let phase=C_PHASES[0];for(const p of C_PHASES)if(pct>=p.pct)phase=p;
+document.getElementById('c-year').textContent=phase.y;
+document.getElementById('c-phase').textContent=phase.p;
+document.getElementById('c-fill').style.width=pct+'%';
+// Draw pyramid rising
+const bw=400,bh=280,ox=200,oy=420;
+const layers=Math.floor(cTime*25);
+cx.fillStyle='#1a1510';cx.fillRect(0,0,800,500);
+// Ground
+cx.fillStyle='#a08858';cx.fillRect(0,oy,800,80);
+// Bedrock cross-section
+if(pct>5){cx.fillStyle='#6a5a40';cx.fillRect(ox,oy,bw,30);cx.fillStyle='#4a3a28';cx.fillRect(ox+bw*.4,oy+10,bw*.2,40)}
+// Pyramid layers
+for(let i=0;i<layers;i++){const t=i/25,w=bw*(1-t),h=bh/25,x=ox+(bw-w)/2,y=oy-h*(i+1);
+cx.fillStyle=`hsl(38,${40+i}%,${55-i*.8}%)`;cx.fillRect(x,y,w,h+1)}
+// Casing (late phase)
+if(pct>90){cx.strokeStyle='rgba(240,236,224,.4)';cx.lineWidth=2;cx.beginPath();cx.moveTo(ox,oy);cx.lineTo(ox+bw/2,oy-bh*Math.min(1,cTime));cx.lineTo(ox+bw,oy);cx.stroke()}
+// Capstone
+if(pct>88){cx.fillStyle='#d4a855';cx.beginPath();cx.moveTo(ox+bw/2-8,oy-bh+12);cx.lineTo(ox+bw/2,oy-bh);cx.lineTo(ox+bw/2+8,oy-bh+12);cx.fill()}
+// Internal chambers (visible after construction)
+if(pct>20){cx.fillStyle='rgba(140,78,90,.5)';cx.fillRect(ox+bw*.45,oy-bh*.63,bw*.1,bh*.04)}
+if(pct>30){cx.fillStyle='rgba(200,184,136,.4)';cx.fillRect(ox+bw*.42,oy-bh*.34,bw*.08,bh*.03)}
+if(pct>45){cx.fillStyle='rgba(212,168,85,.4)';cx.save();cx.translate(ox+bw*.4,oy-bh*.5);cx.rotate(-.46);cx.fillRect(0,0,bw*.02,bh*.3);cx.restore()}
+// Workers
+const wCount=Math.floor(pct/5);
+for(let i=0;i<wCount&&i<20;i++){const wx=ox-30+i*22+Math.sin(cTime*10+i)*3,wy=oy-4;cx.fillStyle='#806040';cx.fillRect(wx,wy-6,3,6);cx.fillRect(wx-1,wy,5,1)}
+// Ramp
+if(pct>15&&pct<95){const rh=bh*cTime*.6;cx.fillStyle='rgba(160,136,88,.3)';cx.beginPath();cx.moveTo(ox+bw,oy);cx.lineTo(ox+bw+120,oy);cx.lineTo(ox+bw,oy-rh);cx.fill()}
+// Stars
+for(let i=0;i<30;i++){cx.fillStyle=`rgba(255,255,220,${.2+Math.sin(cTime*5+i)*.15})`;cx.beginPath();cx.arc(50+i*24,30+Math.sin(i)*20,1,0,Math.PI*2);cx.fill()}
+requestAnimationFrame(drawConstruct)}
+
+// ═══ MOBILE JOYSTICK ═══
+function setupJoystick(){if(!isMobile)return;
+['joy-move','joy-look'].forEach(id=>{const el=document.getElementById(id),base=el.querySelector('.joy-base'),knob=el.querySelector('.joy-knob');let active=false,cx=0,cy=0;
+base.addEventListener('touchstart',e=>{e.preventDefault();active=true;const r=base.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2},{passive:false});
+base.addEventListener('touchmove',e=>{e.preventDefault();if(!active)return;const t=e.targetTouches[0];if(!t)return;const dx=t.clientX-cx,dy=t.clientY-cy,dist=Math.min(Math.hypot(dx,dy),40),ang=Math.atan2(dy,dx);const nx=Math.cos(ang)*dist,ny=Math.sin(ang)*dist;knob.style.transform=`translate(calc(-50% + ${nx}px),calc(-50% + ${ny}px))`;
+if(id==='joy-move'){mv.f=ny<-10?1:0;mv.b=ny>10?1:0;mv.l=nx<-10?1:0;mv.r=nx>10?1:0}else{fc.y-=dx*.0004;fc.p=Math.max(-Math.PI/2+.1,Math.min(Math.PI/2-.1,fc.p-dy*.0004))}},{passive:false});
+const end=()=>{active=false;knob.style.transform='translate(-50%,-50%)';if(id==='joy-move'){mv.f=0;mv.b=0;mv.l=0;mv.r=0}};
+base.addEventListener('touchend',end);base.addEventListener('touchcancel',end)})}
+
+// ═══ WAVEFORM DRAWING ═══
+function drawWaveform(t){if(!_wvCv||!overlays.ac)return;const cv=_wvCv;const cx=cv.getContext('2d'),w=cv.width,h=cv.height;cx.clearRect(0,0,w,h);
+cx.strokeStyle='#44cc88';cx.lineWidth=1.5;cx.beginPath();
+for(let x=0;x<w;x++){const s=x/w*Math.PI*8;const y=h/2+Math.sin(s*121/50+t*4)*h*.18+Math.sin(s*117/50+t*3.5)*h*.12+Math.sin(s*16.2/10+t*2)*h*.08;cx.lineTo(x,y)}cx.stroke();
+cx.strokeStyle='rgba(68,204,136,.25)';cx.lineWidth=1;cx.beginPath();
+for(let x=0;x<w;x++){const s=x/w*Math.PI*4;const y=h/2+Math.sin(s*5/10+t)*h*.25;cx.lineTo(x,y)}cx.stroke()}
+
+// ═══ HOTSPOTS ═══
+function setupHS(){[{t:"King's",p:new THREE.Vector3(1.5,63,0),id:'kings'},{t:"Queen's",p:new THREE.Vector3(0,35,0),id:'queens'},{t:'Gallery',p:new THREE.Vector3(-4,49,0),id:'gallery'},{t:'Subterranean',p:new THREE.Vector3(0,-12,0),id:'sub'},{t:'Entrance',p:new THREE.Vector3(HF*.87,18,0),id:'entrance'},{t:'Big Void',p:new THREE.Vector3(-2,80,0),id:'void_'},{t:'Apex',p:new THREE.Vector3(0,H+4,0),id:'overview'},{t:'Great Sphinx',p:new THREE.Vector3(178,18,195),id:'sphinx'},{t:'Valley Temple',p:new THREE.Vector3(260,8,280),id:'valley'}].forEach(d=>{const el=document.createElement('div');el.className='hs';el.innerHTML=`<div class="hsr"></div><div class="hsl">${d.t}</div>`;el.style.display='none';el.addEventListener('click',()=>showInfo(d.id));document.body.appendChild(el);hs.push({el,pos:d.p})})}
+function upHS(){const show=mode!=='orbit'&&!fps;hs.forEach(h=>{if(!show){h.el.style.display='none';return}const sp=_hsV.copy(h.pos).project(cam);const x=(sp.x*.5+.5)*innerWidth,y=(-sp.y*.5+.5)*innerHeight;if(sp.z<1&&x>-50&&x<innerWidth+50&&y>-30&&y<innerHeight+30){h.el.style.display='block';h.el.style.left=x+'px';h.el.style.top=y+'px';h.el.style.opacity=Math.max(0,1-Math.max(0,sp.z-.92)*12)}else h.el.style.display='none'})}
+
+// ═══ MODES ═══
+function SM(m){
+  aCamId++;
+  if(tourOn&&!tourInternal){tourOn=false;if(tourTimeout){clearTimeout(tourTimeout);tourTimeout=null}document.querySelector('[onclick="toggleTour()" aria-label="Guided tour"]')?.classList.remove('on')}
+  mode=m;
+  // Only remove 'on' from mode buttons, not overlay buttons
+  document.querySelectorAll('.cb[onclick^="SM("]').forEach(b=>b.classList.remove('on'));
+  if(!tourInternal)document.querySelector('[onclick="toggleTour()" aria-label="Guided tour"]')?.classList.remove('on');
+  document.querySelector(`[onclick="SM('${m}')"]`)?.classList.add('on');
+  if(fps&&m!=='fps'){fps=false;document.exitPointerLock?.();document.getElementById('fh').classList.remove('show');document.getElementById('dg').style.display='none';document.getElementById('tw').classList.remove('hidden');oc._en=true;cam.position.set(220,100,240);oc.t.set(0,35,0);oc.s.setFromVector3(new THREE.Vector3().subVectors(cam.position,oc.t));tpOpen=false;document.getElementById('tp').classList.remove('show');ren.domElement.onclick=null;document.onmousemove=null;if(isMobile){document.getElementById('joy-move').classList.remove('show');document.getElementById('joy-look').classList.remove('show');document.getElementById('tp-btn').style.display='none'}}
+  const showInt=m!=='orbit';if(intG){intG.visible=showInt;if(showInt)intG.children.forEach(c=>c.renderOrder=10)};if(dustP)dustP.visible=m==='fps';
+  humanFigs.forEach(f=>f.visible=showInt);
+  godRays.forEach(r=>r.visible=showInt);
+  switch(m){
+    case'orbit':document.getElementById('mbadge').textContent='Orbit Mode';setOp(1,false);oc.ar=true;oc._en=true;break;
+    case'cut':document.getElementById('mbadge').textContent='Cross-Section';setOp(.25,true);oc.ar=false;oc._en=true;aCam(new THREE.Vector3(160,80,130),new THREE.Vector3(0,35,0),1200);break;
+    case'xray':document.getElementById('mbadge').textContent='X-Ray View';setOp(.15,true);oc.ar=false;oc._en=true;aCam(new THREE.Vector3(130,70,110),new THREE.Vector3(0,35,0),1200);break;
+    case'fps':if(!checkPro('fps'))return;document.getElementById('mbadge').textContent='Interior Exploration';setOp(0,true);oc.ar=false;oc._en=false;fps=true;cam.position.set(HF*.8,16,0);fc.y=Math.PI;fc.p=0;document.getElementById('fh').classList.add('show');document.getElementById('dg').style.display='flex';document.getElementById('tw').classList.add('hidden');setTimeout(()=>document.getElementById('fh').classList.remove('show'),4500);if(isMobile){document.getElementById('joy-move').classList.add('show');document.getElementById('joy-look').classList.add('show');document.getElementById('tp-btn').style.display='block'}else{ren.domElement.onclick=()=>{if(fps&&!tpOpen)ren.domElement.requestPointerLock?.()};document.onmousemove=e=>{if(!fps||!document.pointerLockElement)return;fc.y-=e.movementX*.002;fc.p=Math.max(-Math.PI/2+.1,Math.min(Math.PI/2-.1,fc.p-e.movementY*.002))}};break;
+  }
+  if(audioOn&&windG){windG.gain.setTargetAtTime(fps?.03:.1,audioCtx.currentTime,.5)}
+}
+function setOp(op,tr){shells.forEach(s=>{s.mat.transparent=tr;s.mat.opacity=op;s.mat.depthWrite=false;s.mat.depthTest=true;s.mat.side=THREE.DoubleSide;s.mesh.visible=op>.01;s.mesh.renderOrder=0});if(intG){intG.children.forEach(c=>{if(c.material){c.material.depthTest=false;c.material.depthWrite=false}c.renderOrder=999})}}
+
+// ═══ OVERLAYS ═══
+function toggleOverlay(id){
+  if(!isPro&&!FREE_OVERLAYS.includes(id)){showPro(id);return}
+  overlays[id]=!overlays[id];
+  const btn=document.querySelector(`[onclick="toggleOverlay('${id}')"]`);btn?.classList.toggle('on',overlays[id]);
+  // Ensure interior is visible for overlays
+  if(overlays[id]&&mode==='orbit'){SM('xray')}
+  // Update visibility
+  emFieldMeshes.forEach(m=>m.visible=overlays.em);
+  acWaves.forEach(m=>m.visible=overlays.ac);
+  if(thHeatmap)thHeatmap.visible=overlays.th;
+  starLines.forEach(m=>m.visible=overlays.st);
+  geoLayers.forEach(m=>m.visible=overlays.ge);
+  mathOverlays.forEach(m=>m.visible=overlays.math);
+  energyMeshes.forEach(m=>m.visible=overlays.nrg);
+  // Live data
+  document.getElementById('live-data').style.display=(overlays.em||overlays.ac||overlays.th)?'flex':'none';
+  // Legend
+  updateLegend();
+  // Show info (only update if panel already open, don't force-open)
+  if(overlays[id]){const sciId=id==='nrg'?'energy':id;showInfo(sciId,document.getElementById('panel').classList.contains('open'))}
+}
+
+function updateLegend(){
+  const leg=document.getElementById('legend');
+  const active=Object.entries(overlays).filter(([k,v])=>v);
+  if(active.length===0){leg.style.display='none';return}
+  leg.style.display='block';
+  const colors={em:'#4488ff',ac:'#44cc88',th:'#ff4422',st:'#cc88ff',ge:'#aa7744',math:'#d4a855',nrg:'#ff8844'};
+  const names={em:'EM Energy Field',ac:'Acoustic Resonance',th:'Thermal Anomaly',st:'Star Alignment',ge:'Geological Layers',math:'Mathematical Ratios',nrg:'Hidden Energy'};
+  leg.innerHTML=active.map(([k])=>`<div class="li"><div class="dot" style="background:${colors[k]}"></div>${names[k]}</div>`).join('');
+}
+
+// ═══ TELEPORT ═══
+const TPS={entrance:{p:[HF*.8,16,0],y:Math.PI},sub:{p:[0,-13,0],y:Math.PI},queens:{p:[0,33,0],y:0},gallery:{p:[-4,47,0],y:Math.PI*.7},kings:{p:[1.5,61,0],y:0},void:{p:[-2,78,0],y:Math.PI}};
+function tpTo(id){if(!checkPro('teleport'))return;const t=TPS[id];if(!t)return;cam.position.set(...t.p);fc.y=t.y;fc.p=0;tpOpen=false;document.getElementById('tp').classList.remove('show');showInfo(id==='sub'?'sub':id==='void'?'void_':id)}
+
+// ═══ CAMERA ANIM ═══
+let aCamId=0;
+let isPro=true;
+const FREE_SCI=['overview','em','ac','th','st','ge','math','kings','queens','gallery','sub','entrance','void_','sphinx','valley','energy'];
+const FREE_OVERLAYS=['em','ac','th','st','ge','math','nrg'];
+const PRO_FEATURES=[];
+let _tmpV,_tmpE,_fwd,_rgt,_dir,_hsV;
+let _dgf,_dgv,_muonInfo,_ldMuon,_wvEl,_cnEl,_ldEm,_ldAc,_ldTh,_wvCv;
+function aCam(p,l,d){const sp=cam.position.clone(),st=oc.t.clone(),t0=Date.now(),myId=++aCamId;(function s(){if(myId!==aCamId)return;const e=Math.min((Date.now()-t0)/d,1),t=e<.5?4*e*e*e:1-Math.pow(-2*e+2,3)/2;cam.position.lerpVectors(sp,p,t);oc.t.lerpVectors(st,l,t);oc.s.setFromVector3(new THREE.Vector3().subVectors(cam.position,oc.t));if(e<1)requestAnimationFrame(s)})()}
+
+// ═══ TOUR ═══
+const TS=[{p:[260,80,260],l:[0,50,0],i:'overview',m:'orbit',t:3500},{p:[180,20,120],l:[0,20,0],i:'overview',m:'orbit',t:3000},{p:[140,30,10],l:[HF*.85,16,0],i:'entrance',m:'cut',t:3500},{p:[100,15,70],l:[0,-12,0],i:'sub',m:'xray',t:3500},{p:[90,40,60],l:[0,33,0],i:'queens',m:'xray',t:3500},{p:[80,55,50],l:[-4,48,0],i:'gallery',m:'xray',t:3500},{p:[70,70,45],l:[1.5,61,0],i:'kings',m:'xray',t:3500},{p:[60,82,40],l:[-2,78,0],i:'void_',m:'xray',t:3500},{p:[150,100,150],l:[0,30,0],i:'em',m:'xray',t:4000},{p:[200,60,200],l:[0,61,0],i:'ac',m:'xray',t:4000},{p:[180,90,180],l:[0,50,0],i:'math',m:'xray',t:4000},{p:[220,30,230],l:[178,12,195],i:'sphinx',m:'orbit',t:4500},{p:[290,25,310],l:[260,5,280],i:'valley',m:'orbit',t:4000},{p:[200,80,180],l:[0,30,0],i:'energy',m:'xray',t:4000},{p:[250,100,250],l:[0,50,0],i:'overview',m:'orbit',t:3000}];
+let tourOverlays=[],tourInternal=false,tourTimeout=null;
+function toggleTour(){if(tourOn){tourOn=false;if(tourTimeout){clearTimeout(tourTimeout);tourTimeout=null}document.querySelector('[onclick="toggleTour()" aria-label="Guided tour"]')?.classList.remove('on');tourOverlays.forEach(id=>{if(overlays[id])toggleOverlay(id)});tourOverlays=[];return}tourOn=true;tourI=0;tourOverlays=[];document.querySelector('[onclick="toggleTour()" aria-label="Guided tour"]')?.classList.add('on');playTS_()}
+function playTS_(){if(!isPro&&tourI>=7){tourOn=false;tourTimeout=null;document.querySelector('[onclick="toggleTour()")')?.classList.remove('on');SM('orbit');showPro('tour');return}if(!tourOn||tourI>=TS.length){tourOn=false;tourTimeout=null;document.querySelector('[onclick="toggleTour()" aria-label="Guided tour"]')?.classList.remove('on');tourOverlays.forEach(id=>{if(overlays[id])toggleOverlay(id)});tourOverlays=[];SM('orbit');return}const s=TS[tourI];tourInternal=true;SM(s.m);tourInternal=false;showInfo(s.i);['em','ac','math','nrg'].forEach(id=>{const sci=id==='nrg'?'energy':id;if(s.i===sci&&!overlays[id]){toggleOverlay(id);tourOverlays.push(id)}});aCam(new THREE.Vector3(...s.p),new THREE.Vector3(...s.l),1800);tourTimeout=setTimeout(()=>{tourI++;playTS_()},s.t)}
+
+// ═══ INFO ═══
+function showInfo(id,autoOpen){const d=SCI[id];if(!d)return;
+  const isLocked=!isPro&&!FREE_SCI.includes(id);let h=`<div class="pt" style="background:${d.color||'#d4a855'};color:#000">${d.tag}</div><div class="ptitle">${d.title}</div>`;
+if(d.img)h+=`<img class="pimg" src="${d.img}" alt="${d.title}" onerror="this.style.display='none'">`;
+h+=`<div class="pdesc">${d.desc}</div>`;
+if(d.eq)h+=`<div class="peq">${d.eq}</div>`;
+if(d.stats)d.stats.forEach(([k,v])=>h+=`<div class="pstat"><span class="k">${k}</span><span class="v">${v}</span></div>`);
+if(d.src)h+=`<div class="psrc">Sources: ${d.src}</div>`;
+h+='<div class="pnav">';Object.keys(SCI).forEach(k=>h+=`<button class="pnb${k===id?' a':''}" onclick="showInfo('${k}')">${SCI[k].tag}</button>`);h+='</div>';
+if(isLocked){
+    // Show title + first 2 lines + blur + unlock banner
+    const preview=d.desc.split('\\n').slice(0,2).join(' ').substring(0,200)+'...';
+    h=`<div class="pt" style="background:${d.color||'#d4a855'}">${d.tag}</div><h2>${d.title}</h2><div class="blur-pro"><p class="pd">${preview}</p></div><div class="unlock-banner" onclick="showPro('${id}')"><div class="lock-icon">🔒</div><div class="lock-text">Unlock ${d.stats?d.stats.length:0}+ secrets with PRO</div><div class="lock-sub">R$ 9,99 · One-time purchase · Forever yours</div></div>`;
+  }
+  if(d.deep&&d.deep.length&&!isLocked){h+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--gdim)"><div style="font-size:10px;color:var(--gold);font-weight:600;letter-spacing:2px;margin-bottom:8px">⚗️ DEEP SCIENCE (Sciverse)</div>';d.deep.forEach(p=>{h+='<div style="margin-bottom:10px;font-size:11px;line-height:1.5"><strong style="color:var(--gold)">'+p[0]+'</strong><br><span style="color:var(--text);opacity:.85">'+p[1]+'</span></div>'});h+='</div>'}
+  document.getElementById('pi').innerHTML=h;if(autoOpen!==false&&!document.getElementById('panel').classList.contains('open'))document.getElementById('panel').classList.add('open')}
+function togglePanel(){document.getElementById('panel').classList.toggle('open')}
+
+// ═══ TIME ═══
+function onTime(e){if(nightOn)return;const v=e.target.value/100,l=document.getElementById('tl');sunL.position.set(Math.cos(v*Math.PI)*220,Math.max(Math.sin(v*Math.PI)*220+20,8),80);let i,c,ac,ai;if(v<.12){i=.15;c=new THREE.Color(0x3355aa);ac=new THREE.Color(0x0a0a1a);ai=.1;l.textContent='Night'}else if(v<.28){i=.7;c=new THREE.Color(0xff7733);ac=new THREE.Color(0x2a1510);ai=.2;l.textContent='Dawn'}else if(v<.48){i=1.5;c=new THREE.Color(0xfff0dd);ac=new THREE.Color(0xffeedd);ai=.3;l.textContent='Morning'}else if(v<.65){i=1.8;c=new THREE.Color(0xffffff);ac=new THREE.Color(0xffffff);ai=.35;l.textContent='Noon'}else if(v<.82){i=1;c=new THREE.Color(0xff5511);ac=new THREE.Color(0x331108);ai=.2;l.textContent='Sunset'}else{i=.15;c=new THREE.Color(0x3355aa);ac=new THREE.Color(0x0a0a1a);ai=.1;l.textContent='Night'}sunL.intensity=i;sunL.color=c;ambL.color=ac;ambL.intensity=ai}
+
+// ═══ CLICKS ═══
+const rc=new THREE.Raycaster(),pt_=new THREE.Vector2(-9,-9);
+function onClk(e){document.getElementById('panel').classList.remove('open');if(fps||mode==='orbit')return;pt_.x=(e.clientX/innerWidth)*2-1;pt_.y=-(e.clientY/innerHeight)*2+1;rc.setFromCamera(pt_,cam);const h=rc.intersectObjects(ct);if(h.length>0&&h[0].object.userData.id)showInfo(h[0].object.userData.id)}
+
+// ═══ MINIMAP ═══
+function drawMM(){const c=mmCtx,w=220;c.clearRect(0,0,w,w);c.fillStyle='rgba(10,10,15,.4)';c.fillRect(0,0,w,w);const cx=w/2,cy=w/2,sc=.5;c.strokeStyle='rgba(212,168,85,.3)';c.lineWidth=1;c.strokeRect(cx-HF*sc,cy-HF*sc,B*sc,B*sc);if(mode!=='orbit'){c.fillStyle='rgba(140,78,90,.4)';c.fillRect(cx+1*sc-3*sc,cy-2*sc,6*sc,3.5*sc);c.fillStyle='rgba(200,184,136,.3)';c.fillRect(cx-2.5*sc,cy-1.5*sc,5*sc,3*sc);c.fillStyle='rgba(212,168,85,.25)';c.save();c.translate(cx-4*sc,cy);c.rotate(-.1);c.fillRect(-1*sc,-15*sc,2*sc,30*sc);c.restore();c.fillStyle='rgba(68,102,170,.3)';c.fillRect(cx-4*sc,cy-10*sc,4*sc,4*sc)}if(overlays.em){c.strokeStyle='rgba(68,136,255,.4)';c.lineWidth=2;[{x:1.5,y:0,r:5},{x:0,y:0,r:3.5},{x:0,y:0,r:8}].forEach(z=>{c.beginPath();c.arc(cx+z.x*sc,cy+z.y,z.r*sc,0,Math.PI*2);c.stroke()})}const cp=cam.position;c.fillStyle='#d4a855';c.beginPath();c.arc(cx+cp.x*sc,cy+cp.z*sc,3,0,Math.PI*2);c.fill();cam.getWorldDirection(_tmpV);c.strokeStyle='#d4a855';c.lineWidth=2;c.beginPath();c.moveTo(cx+cp.x*sc,cy+cp.z*sc);c.lineTo(cx+cp.x*sc+_tmpV.x*12,cy+cp.z*sc+_tmpV.z*12);c.stroke()}
+
+// ═══ LIVE DATA ═══
+function updateLiveData(t){
+  if(overlays.em&&_ldEm){const v=(Math.sin(t*2)*.5+.5)*4.2+1.3;_ldEm.textContent=v.toFixed(2)}
+  if(overlays.ac&&_ldAc){const freqs=['121','117','16.2','49.5','5.0'];_ldAc.textContent=freqs[Math.floor(t*.3)%freqs.length]}
+  if(overlays.th&&_ldTh){const v=Math.sin(t*.5)*2+3.5;_ldTh.textContent=v.toFixed(1)}
+}
+
+// ═══ LOOP ═══
+function animate(){
+  requestAnimationFrame(animate);
+  try{
+  const dt=clk.getDelta(),t=clk.elapsedTime;
+
+  if(fps&&!tpOpen){
+    const spd=28*dt;_dir.set(0,0,0);
+    _fwd.set(-Math.sin(fc.y),0,-Math.cos(fc.y));_rgt.set(-Math.cos(fc.y),0,Math.sin(fc.y));
+    if(mv.f)_dir.add(_fwd);if(mv.b)_dir.sub(_fwd);if(mv.r)_dir.add(_rgt);if(mv.l)_dir.sub(_rgt);
+    const moving=_dir.lengthSq()>.001;_dir.normalize().multiplyScalar(spd);cam.position.add(_dir);
+    _tmpE.set(fc.p,fc.y,0);cam.quaternion.setFromEuler(_tmpE);
+    if(dustP)dustP.position.copy(cam.position);
+    const depth=Math.max(0,16-cam.position.y);
+    if(_dgf)_dgf.style.height=Math.min(100,depth*2.2)+'%';
+    if(_dgv)_dgv.textContent=Math.round(depth*1.5)+' m';
+    if(moving){stepT+=dt;if(stepT>.4){stepT=0;playStep()}}
+  }
+  if(!fps)oc.update();
+
+  // Capstone
+  const cap=shells.length>0?shells[shells.length-1]:null;if(cap&&cap.mesh)cap.mesh.position.y=H+1+Math.sin(t*1.2)*.4;
+
+  // Flames
+  if(intG&&intG.visible)intG.children.forEach(c=>{if(c.userData.fl){if(c.isPointLight)c.intensity=.3+Math.sin(t*8+c.id)*.15+Math.sin(t*13)*.1;else{const s=.8+Math.sin(t*10+c.id)*.3;c.scale.set(s,s*1.2,s)}}});
+
+  // Dust
+  if(dustP&&dustP.visible){const pos=dustP.geometry.attributes.position,vel=dustP.userData.vel;for(let i=0;i<pos.count;i++){let x=pos.getX(i)+vel[i*3]+Math.sin(t*.5+i)*.002,y=pos.getY(i)+vel[i*3+1],z=pos.getZ(i)+vel[i*3+2]+Math.cos(t*.3+i)*.002;if(y>10)y=-5;if(Math.abs(x)>10)x*=-.5;if(Math.abs(z)>10)z*=-.5;pos.setXYZ(i,x,y,z)}pos.needsUpdate=true}
+
+  // EM Field animation
+  if(overlays.em){emFieldMeshes.forEach((m,i)=>{if(m.isMesh){const s=1+Math.sin(t*2+i)*.25;m.scale.set(s,s,s);m.material.opacity=.08+Math.sin(t*3+i)*.06;m.rotation.y=t*.3+i}})}
+
+  // Acoustic wave animation + 432 Hz ring + Helmholtz
+  if(overlays.ac){acWaves.forEach((w,i)=>{if(w.userData.hz432){const s=1+Math.sin(t*2.77)*.4;w.scale.set(s,1,s);w.material.opacity=.08+Math.sin(t*4.32)*.06;w.rotation.z=Math.sin(t*.5)*.1}
+    else{const s=1+Math.sin(t*4+i*.5)*.3;w.scale.set(s,1,s);w.material.opacity=.06+Math.sin(t*5+i)*.04}})}
+
+  // Thermal pulse
+  if(overlays.th&&thHeatmap){thHeatmap.material.opacity=.2+Math.sin(t*1.5)*.08}
+
+  // Star twinkle + precession dot orbit + Orion pulse
+  if(overlays.st){starLines.forEach((s,i)=>{if(s.isMesh){s.material.opacity=.3+Math.sin(t*2+i)*.15;
+    if(s.userData.precDot){const a=t*.1;s.position.set(Math.cos(a)*40,300,Math.sin(a)*40)}}})}
+
+  // Geo animations (underground pulse, water table, Sphinx chamber, Osiris water)
+  if(overlays.ge){geoLayers.forEach((m,i)=>{if(m.userData.waterTable){const p=m.geometry.attributes.position;for(let j=0;j<p.count;j++){p.setZ(j,Math.sin(p.getX(j)*.05+t*2)*.5+Math.cos(p.getY(j)*.07+t*1.5)*.3)}p.needsUpdate=true}
+    if(m.userData.sphChamber){m.material.opacity=.05+Math.sin(t*2)*.04;m.scale.setScalar(1+Math.sin(t*1.5)*.05)}
+    if(m.userData.osiWater){m.material.opacity=.1+Math.sin(t*1.2)*.05;m.rotation.y=t*.1}
+    if(m.isMesh&&m.material.wireframe&&m.geometry.type==='CylinderGeometry'){m.material.opacity=.1+Math.sin(t*3+i)*.05}})}
+
+  // Math animations (Platonic solids orbit, DNA pulse, Fibonacci)
+  if(overlays.math){mathOverlays.forEach((m,i)=>{if(!m.visible)return;
+    if(m.userData.platonic!==undefined){const a=t*.3+m.userData.platonic*Math.PI*2/5,r=8;m.position.set(1.5+Math.cos(a)*r,61+Math.sin(t+m.userData.platonic)*2,Math.sin(a)*r);m.rotation.x=t*.5+m.userData.platonic;m.rotation.z=t*.3;m.material.opacity=.15+Math.sin(t*2+m.userData.platonic)*.08}
+    else m.rotation.y=t*.05})}
+
+  // Energy field + charge flow + Tesla + lattice + aquifer + earth
+  if(overlays.nrg){energyMeshes.forEach((m,i)=>{
+    if(m.userData.charge){const p=m.geometry.attributes.position;for(let j=0;j<p.count;j++){let y=p.getY(j)+.2;if(y>H){y=-10;p.setX(j,(Math.random()-.5)*30);p.setZ(j,(Math.random()-.5)*30)}p.setY(j,y)}p.needsUpdate=true}
+    else if(m.userData.tesla){m.material.opacity=.1+Math.sin(t*8+i)*.1}
+    else if(m.userData.aquifer){m.material.opacity=.06+Math.sin(t*1.5)*.03;m.position.y=-8+Math.sin(t*.5)*.3}
+    else if(m.userData.earth){m.rotation.y=t*.05;m.material.opacity=.03+Math.sin(t)*.015}
+    else if(m.isMesh){m.material.opacity=.06+Math.sin(t*2+i)*.04;
+      if(m.geometry.type==='SphereGeometry')m.scale.setScalar(1+Math.sin(t*5+i)*.3);
+      if(m.geometry.type==='ConeGeometry'){m.material.opacity=.04+Math.sin(t*1.5)*.02;m.rotation.y=t*.2}
+      if(m.geometry.type==='BoxGeometry'){m.rotation.x=t*.5+i;m.rotation.z=t*.3+i}}})}
+
+  // Sphinx hidden cavity pulse
+  if(sphinxG&&sphinxG.children){sphinxG.children.forEach(c=>{if(c.material&&c.material.wireframe){c.material.opacity=.1+Math.sin(t*3)*.08;c.scale.setScalar(1+Math.sin(t*2)*.1)}})}
+
+  // Sand particles (exterior wind)
+  if(sandP&&sandP.geometry){sandP.rotation.y=t*.006;const sp=sandP.geometry.attributes.position;for(let i=0;i<sp.count;i++){let y=sp.getY(i)+Math.sin(t*.8+i)*.015;if(y>25)y=0;if(y<0)y=25;sp.setY(i,y)}sp.needsUpdate=true}
+
+  // God rays pulse
+  godRays.forEach((r,i)=>{if(r.visible)r.material.opacity=.015+Math.sin(t*1.2+i)*.008});
+
+  // Muon particles (visible in xray/cutaway)
+  if(muonParticles&&muonParticles.geometry){const showMuon=mode==='xray'||mode==='cut';muonParticles.visible=showMuon;
+  if(showMuon){if(_muonInfo)_muonInfo.style.display='block';const mp=muonParticles.geometry.attributes.position;for(let i=0;i<mp.count;i++){let y=mp.getY(i)-muonVel[i];if(y<-30){y=H+50+Math.random()*60;mp.setX(i,(Math.random()-.5)*B*1.2);mp.setZ(i,(Math.random()-.5)*B*1.2)}mp.setY(i,y)}mp.needsUpdate=true;if(_ldMuon)_ldMuon.textContent=Math.floor(t*12%200+800)}else{if(_muonInfo)_muonInfo.style.display='none'}}
+
+  // Waveform
+  if(overlays.ac&&_wvEl){_wvEl.classList.add('show');drawWaveform(t)}else if(_wvEl){_wvEl.classList.remove('show')}
+
+  // Compass
+  cam.getWorldDirection(_tmpV);
+  if(_cnEl)_cnEl.setAttribute('transform',`rotate(${Math.atan2(_tmpV.x,_tmpV.z)*180/Math.PI},20,20)`);
+
+  upHS();if(mmCtx)drawMM();updateLiveData(t);
+  ren.render(scene,cam);
+  }catch(err){console.error('Animate error:',err)}}
+
+function safeInit(){try{init()}catch(e){document.getElementById('lpct').textContent='Error: '+e.message;document.getElementById('lbar').style.background='#ff4422';console.error(e)}}
+if(document.readyState==='complete')safeInit();else window.addEventListener('load',safeInit)
+</script>
+
+<div id="pro-modal">
+<div id="pro-box">
+<button id="pro-close" onclick="closePro()">✕</button>
+<div class="crown">👑</div>
+<h2 data-i18n="gizascan_pro">GIZASCAN PRO</h2>
+<div class="price">R$ 9,99</div>
+<div class="price-sub">$1.99 USD · €1.99 EUR · One-time purchase</div>
+<div class="features">
+<span>✦</span> Walk INSIDE the pyramid (FPS mode)<br>
+<span>✦</span> All 7 scientific overlays<br>
+<span>✦</span> 38 animated 3D elements<br>
+<span>✦</span> Underground tunnel network<br>
+<span>✦</span> 35 levels · 100+ secrets<br>
+<span>✦</span> Night sky · Construction · Teleport<br>
+<span>✦</span> CIA Gateway · DMT · Atlantis · Tesla<br>
+<span>✦</span> Zero ads · Zero subscription · Forever
+</div>
+<button id="pro-buy" onclick="purchasePro()" data-i18n="unlock_pro">UNLOCK PRO</button>
+<button id="pro-later" onclick="closePro()" data-i18n="maybe_later">Maybe later</button>
+</div>
+</div>
+
+</body>
+</html>
